@@ -10,9 +10,12 @@ Built to the canvas design in [`design/KeepUp.dc.html`](design/KeepUp.dc.html).
 
 ```bash
 npm install
-npm start          # http://localhost:4200
-npm test           # vitest, single run: npx ng test --watch=false
-npm run build
+npm start            # dev server on http://localhost:4200
+npm test             # vitest in watch mode
+npm run test:ci      # vitest, single run
+npm run lint         # eslint (TypeScript + templates)
+npm run format       # prettier --write  (format:check to verify only)
+npm run build        # production build
 ```
 
 Out of the box the app runs in **local mode**: same UI, same rules, data kept in
@@ -24,15 +27,35 @@ with cloud sync — no code changes needed.
 1. Create a Firebase project, add a **Web app**, and enable **Authentication →
    Sign-in method → Google**.
 2. Create a **Cloud Firestore** database.
-3. Paste the web config into `src/environments/environment.ts`, replacing the
+3. Paste the web config into `src/environments/environment.ts` (production) and
+   `src/environments/environment.development.ts` (local), replacing the
    `REPLACE_WITH_…` placeholders. These are public identifiers, not secrets —
-   access is enforced by the rules below.
+   access is enforced by the rules below. See [Environments](#environments).
 4. Deploy the rules in [`firestore.rules`](firestore.rules):
    `firebase deploy --only firestore:rules`.
 5. Add your domain under **Authentication → Settings → Authorized domains**.
 
 `FirebaseService.enabled` flips on once the placeholders are gone, and
 `provideKeepUpData()` swaps the Firestore repositories in for the local ones.
+
+### A note on the config values
+
+Firebase web config is **not secret**. The `apiKey` identifies the project; it
+is not an authorization credential. Because this is a browser app the values are
+compiled into the shipped bundle regardless of where they are declared, so a
+`.env` file would hide nothing — it would only move where you type them.
+Committing them is the documented Firebase pattern.
+
+Harden the project in the console instead:
+
+- **API key restrictions** — Google Cloud Console → Credentials → HTTP referrer
+  restrictions, limited to your domains.
+- **Authorized domains** — Firebase Auth → Settings.
+- **App Check** — attests that requests come from your app.
+- **Firestore rules** — see `firestore.rules`, deny-by-default and uid-scoped.
+
+Never put a genuine secret (a service account key, a private API token) in these
+files; it would ship to every visitor.
 
 ### Data layout
 
@@ -43,6 +66,48 @@ users/{uid}/modules/{moduleId}  code, title, threshold, order, assessments[]
 
 Assessments are stored inline on the module document: they are always read and
 written together, and a module holds a handful of them at most.
+
+## Environments
+
+Two files, both type-checked against the `Environment` interface in
+`environment.model.ts` — so a key added to one and forgotten in the other fails
+the build rather than turning up as `undefined` at runtime.
+
+| File                         | Used by                                               |
+| ---------------------------- | ----------------------------------------------------- |
+| `environment.ts`             | `ng build` (production) — the default                 |
+| `environment.development.ts` | `ng serve` and `ng build --configuration development` |
+
+The swap is `fileReplacements` under the `development` configuration in
+`angular.json`; nothing imports the development file directly.
+
+Each holds the Firebase config plus `apiBaseUrl`, which backs the `API_BASE_URL`
+token the HTTP layer uses to resolve `/api/...` paths. Point the development
+file at a **separate Firebase project**, so local experiments and seeded sample
+data never touch real students' marks.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request,
+as three parallel jobs so a failure points straight at what broke:
+
+| Job                 | Runs                                         |
+| ------------------- | -------------------------------------------- |
+| Lint and formatting | `npm run lint`, `npm run format:check`       |
+| Unit tests          | `npm run test:ci`                            |
+| Build               | production build, then the development build |
+
+The development build is included deliberately: without it, a mistake in
+`environment.development.ts` would only surface the next time someone ran
+`ng serve`.
+
+Node comes from `.nvmrc`, so CI and local development stay on one version.
+In-progress runs for a branch are cancelled when it is pushed again.
+
+Linting is `angular-eslint` (flat config in `eslint.config.js`) over both
+TypeScript and templates, including the template accessibility rules. Beyond the
+recommended sets it enforces the house style: standalone components, `OnPush`
+change detection, and the `app`/`ku` selector prefixes.
 
 ## Architecture
 

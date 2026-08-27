@@ -1,16 +1,18 @@
-import type { FirebaseOptions } from 'firebase/app';
+import { Environment } from './environment.model';
 
 /**
- * Firebase web config. These values are public identifiers rather than secrets —
- * access is controlled by Firestore security rules, not by hiding them. Replace
- * the placeholders with the config from your Firebase console
- * (Project settings → Your apps → Web app).
+ * Production environment — the default. `ng build` uses this file as-is;
+ * `ng serve` and `ng build --configuration development` swap in
+ * `environment.development.ts` via `fileReplacements` in `angular.json`.
  *
- * While the placeholders are in place KeepUp runs in local-only mode: the same
- * UI and rules, backed by `localStorage` instead of Firestore.
+ * While the `REPLACE_WITH_…` placeholders are in place KeepUp runs in local-only
+ * mode: the same UI and rules, backed by `localStorage` instead of Firestore.
+ *
+ * See `environment.model.ts` for why these values are safe to commit.
  */
-export const environment = {
-  production: false,
+export const environment: Environment = {
+  production: true,
+  apiBaseUrl: '',
   firebase: {
     apiKey: 'REPLACE_WITH_FIREBASE_API_KEY',
     authDomain: 'REPLACE_WITH_PROJECT.firebaseapp.com',
@@ -18,5 +20,5 @@ export const environment = {
     storageBucket: 'REPLACE_WITH_PROJECT.appspot.com',
     messagingSenderId: 'REPLACE_WITH_SENDER_ID',
     appId: 'REPLACE_WITH_APP_ID',
-  } satisfies FirebaseOptions,
+  },
 };

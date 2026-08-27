@@ -1,0 +1,8 @@
+dist
+node_modules
+.angular
+coverage
+package-lock.json
+# Design canvas export — generated, kept verbatim as the source of truth.
+design
+.nvmrc
