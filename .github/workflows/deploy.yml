@@ -1,0 +1,80 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never cancel a deployment mid-flight; queue the next one instead.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  NG_CLI_ANALYTICS: 'false'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Publishing to a public URL is not the moment to find out the suite is
+      # red. Cheap enough (a few seconds) to be worth the gate.
+      - name: Run tests
+        run: npm run test:ci
+
+      - name: Warn if the production environment is unconfigured
+        run: |
+          if grep -q 'REPLACE_WITH' src/environments/environment.ts; then
+            echo "::warning::src/environments/environment.ts still has REPLACE_WITH placeholders. \
+            The deployed site will run in local (localStorage) mode with no Google sign-in."
+          fi
+
+      # `--configuration production,github-pages` layers a static, SSR-free
+      # output over the production settings. Pages is static hosting and cannot
+      # run the Node server the default build produces.
+      - name: Build
+        run: npx ng build --configuration production,github-pages --base-href /keep-up/
+
+      - name: Prepare the static output
+        working-directory: dist/keep-up/browser
+        run: |
+          # Angular names the client shell index.csr.html whenever outputMode is
+          # set; Pages needs index.html as the directory index.
+          if [ -f index.csr.html ]; then mv index.csr.html index.html; fi
+          test -f index.html || { echo "No index.html produced"; exit 1; }
+
+          # Pages has no SPA rewrite rule, so a deep link or refresh on a route
+          # such as /keep-up/sign-in would hit Pages' own 404. Serving the same
+          # shell from 404.html hands the URL back to the Angular router.
+          cp index.html 404.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/keep-up/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

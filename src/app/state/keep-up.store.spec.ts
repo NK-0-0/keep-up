@@ -252,7 +252,7 @@ describe('KeepUpStore', () => {
     store.removeModule(store.modules()[0].id);
     await settle();
 
-    expect(store.error()).toContain('permission');
+    expect(store.error()).toContain('firestore.rules');
     expect(store.modules()).toHaveLength(4);
 
     store.dismissError();

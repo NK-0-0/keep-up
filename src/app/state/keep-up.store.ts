@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, of, switchMap, tap } from 'rxjs';
+import { catchError, of, retry, switchMap, tap, timer } from 'rxjs';
 import { AuthService } from '../core/auth/auth.service';
 import { ModulesRepository, PreferencesRepository } from '../data/modules.repository';
 import { evaluateModule, summariseSemester } from '../domain/dp-calculator';
@@ -19,6 +19,17 @@ import {
 } from '../domain/module-edits';
 import { DEFAULT_PREFERENCES, Module, Preferences, Profile } from '../domain/models';
 import { sampleSemester } from '../domain/sample-semester';
+
+/**
+ * A terminated listener never recovers on its own, so retry a few times before
+ * giving up. This is what lets the dashboard heal by itself once the Firestore
+ * rules are deployed, instead of needing a reload.
+ */
+const RETRY_ATTEMPTS = 3;
+
+function retryDelay(_error: unknown, attempt: number) {
+  return timer(Math.min(500 * 2 ** (attempt - 1), 4_000));
+}
 
 /**
  * Single source of truth for the dashboard. Holds the persisted state as
@@ -46,9 +57,10 @@ export class KeepUpStore {
       switchMap((ownerId) =>
         ownerId === null
           ? of<Module[]>([])
-          : this.modulesRepository
-              .watch(ownerId)
-              .pipe(catchError((error) => this.recover(error, []))),
+          : this.modulesRepository.watch(ownerId).pipe(
+              retry({ count: RETRY_ATTEMPTS, delay: retryDelay }),
+              catchError((error) => this.recover(error, [])),
+            ),
       ),
       tap(() => this.loadingState.set(false)),
     ),
@@ -60,9 +72,10 @@ export class KeepUpStore {
       switchMap((ownerId) =>
         ownerId === null
           ? of(DEFAULT_PREFERENCES)
-          : this.preferencesRepository
-              .watch(ownerId)
-              .pipe(catchError((error) => this.recover(error, DEFAULT_PREFERENCES))),
+          : this.preferencesRepository.watch(ownerId).pipe(
+              retry({ count: RETRY_ATTEMPTS, delay: retryDelay }),
+              catchError((error) => this.recover(error, DEFAULT_PREFERENCES)),
+            ),
       ),
     ),
     { initialValue: DEFAULT_PREFERENCES },
@@ -195,18 +208,27 @@ export class KeepUpStore {
 
   private async write(operation: (ownerId: string) => Promise<void>): Promise<void> {
     const ownerId = this.ownerId();
-    if (ownerId === null) return;
+    if (ownerId === null) {
+      // Nothing is signed in yet, so there is nowhere to write. Silently
+      // dropping the edit here is what makes a broken session look like a
+      // broken save, so say so instead.
+      this.errorState.set('You are not signed in, so that change was not saved.');
+      report('write', new Error('No owner id: the session has not resolved.'));
+      return;
+    }
 
     try {
       this.errorState.set(null);
       await operation(ownerId);
     } catch (error) {
+      report('write', error);
       this.errorState.set(describe(error));
     }
   }
 
   /** Reports a stream failure without tearing the dashboard down. */
   private recover<T>(error: unknown, fallback: T) {
+    report('read', error);
     this.errorState.set(describe(error));
     this.loadingState.set(false);
     return of(fallback);
@@ -215,11 +237,29 @@ export class KeepUpStore {
 
 function describe(error: unknown): string {
   const code = (error as { code?: string } | null)?.code;
-  if (code === 'permission-denied') {
-    return 'You do not have permission to read or write this data. Check your Firestore rules.';
+  switch (code) {
+    case 'permission-denied':
+      return 'Your Firestore rules rejected that. Deploy firestore.rules: firebase deploy --only firestore:rules';
+    case 'unauthenticated':
+      return 'Your session has expired. Sign in again to keep saving.';
+    case 'unavailable':
+      return 'Cannot reach the database right now. Your changes will sync when you are back online.';
+    case 'failed-precondition':
+      return 'Firestore rejected that request. Check that the database exists and is in Native mode.';
+    case 'not-found':
+      return 'That Firestore database could not be found. Check the project id in your environment file.';
+    default:
+      return (error as Error | null)?.message ?? 'Something went wrong. Please try again.';
   }
-  if (code === 'unavailable') {
-    return 'Cannot reach the database right now. Your changes will sync when you are back online.';
-  }
-  return (error as Error | null)?.message ?? 'Something went wrong. Please try again.';
+}
+
+/**
+ * Puts the raw Firebase error in the console alongside the friendly message.
+ * The `code` is what actually identifies the problem — `permission-denied`
+ * versus `unavailable` are very different fixes — and it is lost by the time
+ * the message reaches the banner.
+ */
+function report(operation: 'read' | 'write', error: unknown): void {
+  const code = (error as { code?: string } | null)?.code ?? 'unknown';
+  console.error(`[KeepUp] Firestore ${operation} failed (code: ${code})`, error);
 }

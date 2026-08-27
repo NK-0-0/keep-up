@@ -6,6 +6,13 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
+
+  /* This reset used to come from `.detail` in the parent card. View
+     encapsulation means it no longer reaches here, and without it the empty
+     state picks up the browser's default paragraph margins. */
+  p {
+    margin: 0;
+  }
 }
 
 .assessments__head,
@@ -53,6 +60,10 @@
 
 .assessments__field {
   width: 100%;
+  /* Grid items default to `min-width: auto`, so a bare <input> refuses to
+     shrink below its intrinsic ~20-character width and pushes the 1fr column
+     wider than the card. The draft row is the one that hits this. */
+  min-width: 0;
   padding: 9px 6px;
   border-radius: 12px;
   color: var(--ku-text-dim);

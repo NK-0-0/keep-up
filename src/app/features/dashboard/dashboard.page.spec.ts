@@ -137,6 +137,31 @@ describe('DashboardPage', () => {
     expect(text()).toContain('DP BAR FOR THIS MODULE');
   });
 
+  it('renders a newly added module in the detail view with no assessments', async () => {
+    click('.toolbar .ku-button--primary');
+    await settle();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const code = host.querySelector<HTMLInputElement>('.add-module__code')!;
+    code.value = 'CSC2601';
+    code.dispatchEvent(new Event('input'));
+    click('.add-module__submit');
+    await settle();
+
+    host.querySelectorAll<HTMLElement>('.segmented__option')[1].click();
+    await settle();
+
+    // A module with no assessments takes the @empty branch, which is what the
+    // detail card shows immediately after one is created.
+    expect(host.querySelectorAll('ku-assessment-table')).toHaveLength(1);
+    expect(host.querySelectorAll('.assessments__row')).toHaveLength(0);
+    expect(text()).toContain('No assessments yet');
+    // A module created seconds ago must not be reported as a lost cause.
+    expect(text()).not.toContain("DIDN'T MAKE DP");
+    expect(text()).toContain('IN PROGRESS');
+    expect(text()).toContain('Add the assessments that count towards this module');
+  });
+
   it('renames a module through the detail card', async () => {
     click('.placeholder--empty button');
     await settle();

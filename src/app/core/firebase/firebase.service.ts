@@ -1,4 +1,4 @@
-import { inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { inject, Injectable, isDevMode, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
 import { Auth, getAuth } from 'firebase/auth';
@@ -23,6 +23,21 @@ export class FirebaseService {
 
   private appRef: FirebaseApp | null = null;
   private authRef: Auth | null = null;
+
+  constructor() {
+    // Which backend is live is the first thing you need to know when data is
+    // not turning up where you expect it, and it is otherwise invisible.
+    if (!this.isBrowser || !isDevMode()) return;
+
+    if (this.enabled) {
+      console.info(`[KeepUp] Data backend: Firestore, project "${this.config.projectId}".`);
+    } else {
+      console.warn(
+        '[KeepUp] Data backend: on-device localStorage. Firebase is not configured, ' +
+          'so nothing will be written to Firestore. Fill in src/environments/environment.ts.',
+      );
+    }
+  }
 
   get app(): FirebaseApp {
     this.assertEnabled();

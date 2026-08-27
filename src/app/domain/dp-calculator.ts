@@ -93,8 +93,14 @@ export function evaluateModule(
   const totals = computeTotals(module);
   const threshold = resolveThreshold(module, defaultThreshold);
 
-  const secured = totals.earned >= threshold;
-  const missed = totals.best < threshold - EPSILON;
+  // A module with nothing recorded yet has no verdict to give. Without this
+  // guard the arithmetic is technically right but the conclusion is absurd:
+  // best = 0, so a module created seconds ago is declared unreachable and shown
+  // as a failure before the student has entered anything.
+  const assessed = totals.totalWeight > 0;
+
+  const secured = assessed && totals.earned >= threshold;
+  const missed = assessed && totals.best < threshold - EPSILON;
   const status: DpStatus = secured ? 'secured' : missed ? 'missed' : 'in-progress';
 
   const requiredAverage =
@@ -108,8 +114,8 @@ export function evaluateModule(
     threshold,
     status,
     requiredAverage,
-    verdict: buildVerdict(totals, threshold, status, requiredAverage),
-    shortNote: buildShortNote(totals, threshold, status, requiredAverage),
+    verdict: buildVerdict(totals, threshold, status, requiredAverage, assessed),
+    shortNote: buildShortNote(totals, threshold, status, requiredAverage, assessed),
     weightWarning: buildWeightWarning(module, totals),
   };
 }
@@ -140,7 +146,11 @@ function buildVerdict(
   threshold: number,
   status: DpStatus,
   requiredAverage: number | null,
+  assessed: boolean,
 ): string {
+  if (!assessed) {
+    return 'Add the assessments that count towards this module to see where you stand.';
+  }
   if (status === 'secured') {
     return 'DP secured — you have already banked enough to write.';
   }
@@ -164,7 +174,9 @@ function buildShortNote(
   threshold: number,
   status: DpStatus,
   requiredAverage: number | null,
+  assessed: boolean,
 ): string {
+  if (!assessed) return 'No assessments yet';
   if (status === 'secured') return `Past the ${threshold}% DP bar`;
   if (status === 'missed') return `Cannot reach ${threshold}%`;
   if (requiredAverage === null) {

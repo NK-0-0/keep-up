@@ -97,6 +97,29 @@ describe('evaluateModule', () => {
     expect(result.verdict).toBe('Nothing left to write and you are 0% short.');
   });
 
+  it('does not condemn a module that has no assessments yet', () => {
+    const result = evaluateModule(moduleWith([]), 50);
+
+    // best = 0 < 50, so the raw arithmetic says "unreachable". A module created
+    // seconds ago has simply not been filled in.
+    expect(result.status).toBe('in-progress');
+    expect(result.shortNote).toBe('No assessments yet');
+    expect(result.verdict).toContain('Add the assessments');
+  });
+
+  it('treats a module whose weights are all zero the same way', () => {
+    const result = evaluateModule(moduleWith([assessment(0, null)]), 50);
+
+    expect(result.status).toBe('in-progress');
+    expect(result.shortNote).toBe('No assessments yet');
+  });
+
+  it('starts judging as soon as there is weight on the board', () => {
+    const result = evaluateModule(moduleWith([assessment(100, 10)]), 50);
+
+    expect(result.status).toBe('missed');
+  });
+
   it('warns when weights do not add up to 100', () => {
     expect(evaluateModule(moduleWith([assessment(80, 50)]), 50).weightWarning).toBe(
       'Weights add to 80% — 20% unaccounted for.',
@@ -116,6 +139,13 @@ describe('evaluateModule', () => {
 });
 
 describe('summariseSemester', () => {
+  it('counts a brand-new empty module as still in progress', () => {
+    const summary = summariseSemester([evaluateModule(moduleWith([]), 50)]);
+
+    expect([summary.secured, summary.inProgress, summary.missed]).toEqual([0, 1, 0]);
+    expect(summary.title).toBe('DP secured in 0 of 1');
+  });
+
   it('invites setup when there are no modules', () => {
     const summary = summariseSemester([]);
 

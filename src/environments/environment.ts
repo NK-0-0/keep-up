@@ -14,11 +14,12 @@ export const environment: Environment = {
   production: true,
   apiBaseUrl: '',
   firebase: {
-    apiKey: 'REPLACE_WITH_FIREBASE_API_KEY',
-    authDomain: 'REPLACE_WITH_PROJECT.firebaseapp.com',
-    projectId: 'REPLACE_WITH_PROJECT_ID',
-    storageBucket: 'REPLACE_WITH_PROJECT.appspot.com',
-    messagingSenderId: 'REPLACE_WITH_SENDER_ID',
-    appId: 'REPLACE_WITH_APP_ID',
+    apiKey: 'AIzaSyDZhB6ndXYDSAoQfrsolgWFdrRSbgrG6NE',
+    authDomain: 'keep-up-e547f.firebaseapp.com',
+    projectId: 'keep-up-e547f',
+    storageBucket: 'keep-up-e547f.firebasestorage.app',
+    messagingSenderId: '2543788048',
+    appId: '1:2543788048:web:fa83b1e567b589e6962a95',
+    measurementId: 'G-KL5W8G3PNT',
   },
 };
