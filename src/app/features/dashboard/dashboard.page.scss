@@ -133,6 +133,15 @@
   }
 }
 
+/* Only the loading variant lays its children out in a row-wise stack; the
+   empty state keeps its original spacing. */
+.placeholder--loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
 .placeholder__title {
   font-size: 19px;
   font-weight: 800;

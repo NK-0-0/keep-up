@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { Logo } from '../../shared/logo/logo';
+import { Spinner } from '../../shared/spinner/spinner';
 import { RETURN_URL_PARAM, safeReturnUrl } from '../../core/auth/auth.guard';
 
 /**
@@ -9,6 +11,7 @@ import { RETURN_URL_PARAM, safeReturnUrl } from '../../core/auth/auth.guard';
  */
 @Component({
   selector: 'ku-sign-in',
+  imports: [Logo, Spinner],
   templateUrl: './sign-in.page.html',
   styleUrl: './sign-in.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

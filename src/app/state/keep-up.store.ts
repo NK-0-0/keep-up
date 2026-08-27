@@ -10,7 +10,9 @@ import {
   createAssessment,
   createModule,
   normaliseMark,
+  normaliseText,
   parseNumber,
+  renameModule,
   clampPercent,
   removeAssessment,
   updateAssessment,
@@ -113,6 +115,11 @@ export class KeepUpStore {
     );
   }
 
+  /** Renames a module in place; its document id is untouched. */
+  updateModule(moduleId: string, changes: { code?: string; title?: string }): void {
+    this.patch(moduleId, (module) => renameModule(module, changes));
+  }
+
   removeModule(moduleId: string): void {
     void this.write((ownerId) => this.modulesRepository.remove(ownerId, moduleId));
   }
@@ -138,6 +145,14 @@ export class KeepUpStore {
   setAssessmentMark(moduleId: string, assessmentId: string, value: string): void {
     const mark = normaliseMark(value);
     this.patch(moduleId, (module) => updateAssessment(module, assessmentId, { mark }));
+  }
+
+  setAssessmentName(moduleId: string, assessmentId: string, value: string): void {
+    this.patch(moduleId, (module) => {
+      const current = module.assessments.find((entry) => entry.id === assessmentId);
+      const name = normaliseText(value, current?.name ?? 'Assessment');
+      return updateAssessment(module, assessmentId, { name });
+    });
   }
 
   removeAssessment(moduleId: string, assessmentId: string): void {

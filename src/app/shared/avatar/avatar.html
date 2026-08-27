@@ -1,0 +1,13 @@
+@if (photo(); as source) {
+  <img
+    class="avatar__photo"
+    alt=""
+    referrerpolicy="no-referrer"
+    [src]="source"
+    [attr.width]="size()"
+    [attr.height]="size()"
+    (error)="onError()"
+  />
+} @else {
+  <span class="avatar__initials" aria-hidden="true">{{ initials() }}</span>
+}

@@ -57,6 +57,66 @@ Harden the project in the console instead:
 Never put a genuine secret (a service account key, a private API token) in these
 files; it would ship to every visitor.
 
+### What you still need to do
+
+1. **Deploy the security rules.** They are the only thing stopping one student
+   reading another's marks — an unconfigured database is open.
+   ```bash
+   npm install -g firebase-tools
+   firebase login
+   firebase use --add          # pick your project, alias it "default"
+   firebase deploy --only firestore:rules
+   ```
+2. **Fill in `src/environments/environment.ts`.** It still holds
+   `REPLACE_WITH_…` placeholders, so a production build runs silently in
+   localStorage mode with no sign-in. The development file is already configured.
+3. **Check Authentication → Sign-in method → Google** is enabled, and that your
+   production domain is listed under **Authentication → Settings → Authorized
+   domains** (`localhost` is allowed by default).
+4. **Restrict the API key** — Cloud Console → Credentials → HTTP referrers.
+
+No composite indexes are needed: the only query is a single-field
+`orderBy('order')`, which Firestore serves from the automatic index.
+`firestore.indexes.json` is committed empty so `firebase deploy` has something
+to point at.
+
+### CRUD map
+
+Every operation goes through `KeepUpStore`, which is the only writer. All data is
+partitioned by the Firebase uid, so a student can only ever address their own
+documents.
+
+| Action in the UI                    | Store command         | Firestore effect                                        |
+| ----------------------------------- | --------------------- | ------------------------------------------------------- |
+| **+ New module**                    | `addModule`           | `setDoc` on `users/{uid}/modules/{new id}`              |
+| Rename a module (pencil toggle)     | `updateModule`        | `setDoc` — same document id, new `code`/`title`         |
+| DP bar stepper on a card            | `setModuleThreshold`  | `setDoc` with the module's `threshold` override         |
+| **×** on a module                   | `removeModule`        | `deleteDoc`                                             |
+| **+ Add assessment**                | `addAssessment`       | `setDoc` — appended to the module's `assessments` array |
+| Edit an assessment name             | `setAssessmentName`   | `setDoc`                                                |
+| Edit a weight                       | `setAssessmentWeight` | `setDoc`                                                |
+| Edit a mark                         | `setAssessmentMark`   | `setDoc` (blank clears it back to "not written")        |
+| **×** on an assessment              | `removeAssessment`    | `setDoc`                                                |
+| Edit profile / qualification / year | `updateProfile`       | `setDoc` on `users/{uid}` with `merge: true`            |
+| Default DP bar                      | `setDefaultThreshold` | `setDoc` on `users/{uid}` with `merge: true`            |
+| Load sample semester                | `loadSample`          | Batched `writeBatch` replacing the collection           |
+| Clear everything                    | `clearAll`            | Batched `writeBatch` deleting every module              |
+
+Reads are live: `onSnapshot` on the module collection and the user document, so
+a change made in one tab appears in the others without a refresh.
+
+Assessments live inline on the module document rather than in a sub-collection.
+They are always read and written together, a module holds a handful at most, and
+this keeps every edit a single atomic write.
+
+### Offline behaviour
+
+`FirestoreService` enables a persistent local cache with multi-tab support.
+Writes hit the cache immediately and queue for the server, so entering marks
+works on patchy campus wifi and the UI never waits on the network. If IndexedDB
+is unavailable — private browsing, or a browser that blocks it — it falls back
+to the in-memory cache and everything still works, just without offline support.
+
 ### Data layout
 
 ```
@@ -156,6 +216,15 @@ a session is established. Everything else reads its signals.
 Sign-in uses `browserLocalPersistence`, so a session survives a browser restart,
 and `getRedirectResult` runs at startup to complete the redirect flow.
 
+### Ending a session
+
+`SessionRedirect` watches the auth status and returns the student to sign-in
+when an **established** session ends. Watching the status rather than hooking
+the sign-out button means it also covers a revoked or expired token and a
+sign-out performed in another tab — Firebase propagates all of those the same
+way. The initial `pending → signed-out` on a cold load is left to the guards, so
+the two do not race and the `returnUrl` survives.
+
 ### Guards
 
 - `authGuard` waits for `whenReady()` before deciding, so refreshing a protected
@@ -222,6 +291,14 @@ Same-origin backends need nothing. For a separate host, provide the token:
 { provide: API_BASE_URL, useValue: 'https://api.keepup.app' }
 ```
 
+## Shared UI
+
+| Component    | Notes                                                                                                                                                                                                                                                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ku-logo`    | The KeepUp mark — rising bars crossing a DP threshold line. Kept in step with `public/favicon.svg`, which is the same artwork.                                                                                                                                                                                                                         |
+| `ku-avatar`  | The student's Google profile picture, falling back to initials. The fallback is not optional: a photo URL can 404 after an account change, and privacy extensions block `googleusercontent.com`, so `(error)` has to hand over to the initials at runtime. Requests the image at 2× via the `=sNN-c` suffix, and sends `referrerpolicy="no-referrer"`. |
+| `ku-spinner` | Indeterminate ring, coloured from `currentColor`. Decorative — the host control announces the busy state via `aria-busy`. Falls back to a pulse under `prefers-reduced-motion`.                                                                                                                                                                        |
+
 ## Notifications
 
 `NotificationService` holds a signal-backed stack rendered once by
@@ -245,4 +322,12 @@ npx ng test --watch=false
 - the full interceptor chain against `HttpTestingController` — URL resolution,
   token attachment and the off-origin refusal, error normalisation, 401
   sign-out, retry backoff and `Retry-After`, and timeout handling;
-- the guards, including the open-redirect cases for `returnUrl`.
+- the guards, including the open-redirect cases for `returnUrl`;
+- the sign-out redirect, including the cold-load case it must _not_ handle;
+- the avatar's photo-to-initials fallback and the Google URL rewriting.
+
+Suites that build a real `AuthService` call `provideUnconfiguredFirebase()` from
+`src/testing`. Without it, `FirebaseService.enabled` is read from the
+environment file, so the suite would pass on a fresh clone and fail once
+somebody filled in their Firebase config. It also guarantees no test touches the
+network.

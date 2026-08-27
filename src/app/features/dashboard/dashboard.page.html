@@ -3,6 +3,7 @@
   [initials]="store.initials()"
   [photoUrl]="photoUrl()"
   [showSignOut]="canSignOut()"
+  [signingOut]="signingOut()"
   (signOut)="signOut()"
 />
 
@@ -10,6 +11,7 @@
   <ku-profile-card
     [profile]="store.profile()"
     [initials]="store.initials()"
+    [photoUrl]="photoUrl()"
     [defaultThreshold]="store.defaultThreshold()"
     (profileChange)="store.updateProfile($event)"
     (defaultThresholdChange)="store.setDefaultThreshold($event)"
@@ -76,7 +78,10 @@
   }
 
   @if (store.loading() && store.isEmpty()) {
-    <p class="placeholder" role="status">Loading your modules…</p>
+    <p class="placeholder placeholder--loading" role="status">
+      <ku-spinner [size]="20" />
+      <span>Loading your modules…</span>
+    </p>
   } @else if (showEmptyState()) {
     <div class="placeholder placeholder--empty">
       <p class="placeholder__title">Nothing here yet</p>
@@ -99,6 +104,8 @@
         <ku-module-detail-card
           [evaluation]="evaluation"
           (thresholdChange)="store.setModuleThreshold(evaluation.module.id, $event)"
+          (moduleRenamed)="store.updateModule(evaluation.module.id, $event)"
+          (assessmentRenamed)="renameAssessment(evaluation.module.id, $event)"
           (moduleRemoved)="store.removeModule(evaluation.module.id)"
           (assessmentAdded)="addAssessment(evaluation.module.id, $event)"
           (weightChanged)="changeWeight(evaluation.module.id, $event)"

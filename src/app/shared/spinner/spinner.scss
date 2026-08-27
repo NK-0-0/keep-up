@@ -1,0 +1,36 @@
+:host {
+  display: inline-flex;
+  flex: none;
+}
+
+.spinner {
+  display: block;
+  width: var(--spinner-size, 18px);
+  height: var(--spinner-size, 18px);
+  border-radius: 50%;
+  border: 2px solid currentcolor;
+  border-top-color: transparent;
+  animation: ku-spin 0.7s linear infinite;
+}
+
+@keyframes ku-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* The global reduced-motion rule all but stops the animation, so fall back to a
+   pulse that still reads as "working". */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: ku-spinner-pulse 1.4s ease-in-out infinite !important;
+    border-top-color: currentcolor;
+    opacity: 0.6;
+  }
+}
+
+@keyframes ku-spinner-pulse {
+  50% {
+    opacity: 0.2;
+  }
+}

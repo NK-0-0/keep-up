@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ModulesRepository, PreferencesRepository } from '../data/modules.repository';
 import { DEFAULT_PREFERENCES, Module, Preferences } from '../domain/models';
+import { provideUnconfiguredFirebase } from '../../testing/firebase-testing';
 import { KeepUpStore } from './keep-up.store';
 
 class FakeModulesRepository extends ModulesRepository {
@@ -72,6 +73,7 @@ describe('KeepUpStore', () => {
 
     TestBed.configureTestingModule({
       providers: [
+        ...provideUnconfiguredFirebase(),
         KeepUpStore,
         { provide: ModulesRepository, useValue: modules },
         { provide: PreferencesRepository, useValue: preferences },
@@ -135,6 +137,93 @@ describe('KeepUpStore', () => {
 
     expect(store.defaultThreshold()).toBe(60);
     expect(store.evaluations()[0].threshold).toBe(60);
+  });
+
+  it('renames a module without changing its identity in storage', async () => {
+    store.addModule('CSC2601', 'Database Systems');
+    await settle();
+    const moduleId = store.modules()[0].id;
+
+    store.updateModule(moduleId, { code: ' inf2611 ', title: '  Information Systems  ' });
+    await settle();
+
+    const [stored] = modules.modules.value;
+    expect(stored.id).toBe(moduleId);
+    expect(stored.code).toBe('INF2611');
+    expect(stored.title).toBe('Information Systems');
+  });
+
+  it('keeps the previous value when a rename is left blank', async () => {
+    store.addModule('CSC2601', 'Database Systems');
+    await settle();
+    const moduleId = store.modules()[0].id;
+
+    store.updateModule(moduleId, { code: '   ', title: '' });
+    await settle();
+
+    expect(modules.modules.value[0].code).toBe('CSC2601');
+    expect(modules.modules.value[0].title).toBe('Database Systems');
+  });
+
+  it('renames an assessment, leaving its weight and mark intact', async () => {
+    store.addModule('CSC2601', 'Database Systems');
+    await settle();
+    const moduleId = store.modules()[0].id;
+
+    store.addAssessment(moduleId, 'Test 1', '40', '65');
+    await settle();
+    const assessmentId = store.modules()[0].assessments[0].id;
+
+    store.setAssessmentName(moduleId, assessmentId, '  Semester Test 1 ');
+    await settle();
+
+    expect(store.modules()[0].assessments[0]).toMatchObject({
+      id: assessmentId,
+      name: 'Semester Test 1',
+      weight: 40,
+      mark: 65,
+    });
+  });
+
+  it('ignores a blank assessment rename', async () => {
+    store.addModule('CSC2601', 'Database Systems');
+    await settle();
+    const moduleId = store.modules()[0].id;
+    store.addAssessment(moduleId, 'Test 1', '40', '65');
+    await settle();
+    const assessmentId = store.modules()[0].assessments[0].id;
+
+    store.setAssessmentName(moduleId, assessmentId, '   ');
+    await settle();
+
+    expect(store.modules()[0].assessments[0].name).toBe('Test 1');
+  });
+
+  it('removes a single assessment without touching the others', async () => {
+    store.addModule('CSC2601', 'Database Systems');
+    await settle();
+    const moduleId = store.modules()[0].id;
+    store.addAssessment(moduleId, 'Test 1', '50', '60');
+    await settle();
+    store.addAssessment(moduleId, 'Test 2', '50', '');
+    await settle();
+
+    const [first] = store.modules()[0].assessments;
+    store.removeAssessment(moduleId, first.id);
+    await settle();
+
+    expect(store.modules()[0].assessments).toHaveLength(1);
+    expect(store.modules()[0].assessments[0].name).toBe('Test 2');
+  });
+
+  it('updates the qualification and year of study', async () => {
+    store.updateProfile({ course: 'BSc Computer Science', year: '2nd year' });
+    await settle();
+
+    expect(preferences.preferences.value.profile).toMatchObject({
+      course: 'BSc Computer Science',
+      year: '2nd year',
+    });
   });
 
   it('seeds and clears the whole semester', async () => {

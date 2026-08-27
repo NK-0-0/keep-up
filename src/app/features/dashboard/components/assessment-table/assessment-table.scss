@@ -1,0 +1,115 @@
+:host {
+  display: block;
+}
+
+.assessments {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.assessments__head,
+.assessments__row {
+  display: grid;
+  grid-template-columns: 1fr 74px 82px 30px;
+  gap: 8px;
+  align-items: center;
+}
+
+.assessments__head {
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  color: var(--ku-text-faint);
+}
+
+.assessments__centred {
+  text-align: center;
+}
+
+.assessments__name {
+  min-width: 0;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--ku-surface-inset);
+  color: var(--ku-text);
+  font-size: 14.5px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  outline: none;
+
+  &:hover {
+    border-color: var(--ku-border-strong);
+  }
+
+  &:focus {
+    border-color: var(--ku-mint);
+    background: var(--ku-surface-sunken);
+  }
+}
+
+.assessments__field {
+  width: 100%;
+  padding: 9px 6px;
+  border-radius: 12px;
+  color: var(--ku-text-dim);
+
+  &--mark {
+    font-weight: 900;
+  }
+
+  &--graded {
+    background: rgb(95 216 160 / 7%);
+    color: var(--ku-text-bright);
+  }
+
+  &--draft {
+    border-color: var(--ku-mint-deep);
+    color: var(--ku-text);
+    padding: 9px 12px;
+  }
+}
+
+.assessments__row--draft {
+  animation: ku-pop 0.2s ease both;
+}
+
+.assessments__empty {
+  padding: 4px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ku-text-dimmer);
+}
+
+.save-button {
+  border: none;
+  background: var(--ku-mint);
+  color: var(--ku-mint-ink);
+  cursor: pointer;
+  height: 34px;
+  border-radius: var(--ku-radius-sm);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.add-button {
+  margin-top: 2px;
+  align-self: flex-start;
+  white-space: nowrap;
+  border: 1px dashed var(--ku-border-bright);
+  background: transparent;
+  color: #9aa2ab;
+  cursor: pointer;
+  padding: 8px 15px;
+  border-radius: 11px;
+  font-size: 13.5px;
+  font-weight: 800;
+
+  &:hover {
+    color: var(--ku-mint);
+    border-color: var(--ku-mint-deep);
+  }
+}

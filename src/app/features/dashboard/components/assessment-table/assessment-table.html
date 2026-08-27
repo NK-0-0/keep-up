@@ -1,0 +1,84 @@
+<div class="assessments">
+  <div class="assessments__head" aria-hidden="true">
+    <span>ASSESSMENT</span>
+    <span class="assessments__centred">WEIGHT</span>
+    <span class="assessments__centred">YOUR %</span>
+    <span></span>
+  </div>
+
+  @for (assessment of assessments(); track assessment.id) {
+    <div class="assessments__row">
+      <input
+        class="ku-input assessments__name"
+        [value]="assessment.name"
+        [title]="assessment.name"
+        [attr.aria-label]="moduleCode() + ' — name of ' + assessment.name"
+        (change)="onName(assessment.id, $event)"
+      />
+
+      <input
+        class="ku-input ku-input--numeric assessments__field"
+        inputmode="numeric"
+        [value]="assessment.weight"
+        [attr.aria-label]="assessment.name + ' weight, percent of the module'"
+        (change)="onWeight(assessment.id, $event)"
+      />
+
+      <input
+        class="ku-input ku-input--numeric assessments__field assessments__field--mark"
+        inputmode="numeric"
+        placeholder="—"
+        [class.assessments__field--graded]="assessment.mark !== null"
+        [value]="assessment.mark ?? ''"
+        [attr.aria-label]="assessment.name + ' mark, percent'"
+        (change)="onMark(assessment.id, $event)"
+      />
+
+      <button
+        type="button"
+        class="ku-icon-button"
+        [attr.aria-label]="'Delete ' + assessment.name"
+        (click)="removed.emit(assessment.id)"
+      >
+        &times;
+      </button>
+    </div>
+  } @empty {
+    <p class="assessments__empty">No assessments yet — add the ones that count towards DP.</p>
+  }
+
+  @if (addOpen()) {
+    <div class="assessments__row assessments__row--draft">
+      <input
+        class="ku-input assessments__field assessments__field--draft"
+        placeholder="Test 1 / Assignment 2"
+        aria-label="New assessment name"
+        [value]="draftName()"
+        (input)="onDraft('name', $event)"
+      />
+      <input
+        class="ku-input ku-input--numeric assessments__field assessments__field--draft"
+        inputmode="numeric"
+        placeholder="20"
+        aria-label="New assessment weight"
+        [value]="draftWeight()"
+        (input)="onDraft('weight', $event)"
+      />
+      <input
+        class="ku-input ku-input--numeric assessments__field assessments__field--draft"
+        inputmode="numeric"
+        placeholder="—"
+        aria-label="New assessment mark"
+        [value]="draftMark()"
+        (input)="onDraft('mark', $event)"
+      />
+      <button type="button" class="save-button" aria-label="Save assessment" (click)="saveDraft()">
+        &check;
+      </button>
+    </div>
+  }
+
+  <button type="button" class="add-button" (click)="toggleAdd()">
+    {{ addOpen() ? 'Cancel' : '+ Add assessment' }}
+  </button>
+</div>

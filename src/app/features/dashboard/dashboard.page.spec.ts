@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ModulesRepository, PreferencesRepository } from '../../data/modules.repository';
 import { DEFAULT_PREFERENCES, Module, Preferences } from '../../domain/models';
 import { KeepUpStore } from '../../state/keep-up.store';
+import { provideUnconfiguredFirebase } from '../../../testing/firebase-testing';
 import { DashboardPage } from './dashboard.page';
 
 class StubModulesRepository extends ModulesRepository {
@@ -14,7 +15,15 @@ class StubModulesRepository extends ModulesRepository {
   }
 
   async save(_ownerId: string, module: Module): Promise<void> {
-    this.modules.next([...this.modules.value, module]);
+    // Upsert, matching the real repositories — a save is used for both
+    // creating a module and updating one in place.
+    const current = this.modules.value;
+    const exists = current.some((candidate) => candidate.id === module.id);
+    this.modules.next(
+      exists
+        ? current.map((candidate) => (candidate.id === module.id ? module : candidate))
+        : [...current, module],
+    );
   }
 
   async remove(): Promise<void> {}
@@ -25,16 +34,21 @@ class StubModulesRepository extends ModulesRepository {
 }
 
 class StubPreferencesRepository extends PreferencesRepository {
+  readonly preferences = new BehaviorSubject<Preferences>(DEFAULT_PREFERENCES);
+
   watch(): Observable<Preferences> {
-    return of(DEFAULT_PREFERENCES);
+    return this.preferences.asObservable();
   }
 
-  async save(): Promise<void> {}
+  async save(_ownerId: string, preferences: Preferences): Promise<void> {
+    this.preferences.next(preferences);
+  }
 }
 
 describe('DashboardPage', () => {
   let fixture: ComponentFixture<DashboardPage>;
   let repository: StubModulesRepository;
+  let preferences: StubPreferencesRepository;
 
   function text(): string {
     return (fixture.nativeElement as HTMLElement).textContent ?? '';
@@ -53,15 +67,19 @@ describe('DashboardPage', () => {
 
   beforeEach(async () => {
     repository = new StubModulesRepository();
+    preferences = new StubPreferencesRepository();
 
-    TestBed.configureTestingModule({ imports: [DashboardPage] }).overrideComponent(DashboardPage, {
+    TestBed.configureTestingModule({
+      imports: [DashboardPage],
+      providers: [...provideUnconfiguredFirebase()],
+    }).overrideComponent(DashboardPage, {
       set: {
         providers: [
           // Replaces the component's own `provideKeepUpData()` so the test never
           // reaches for Firebase, keeping the store it would have provided.
           KeepUpStore,
           { provide: ModulesRepository, useValue: repository },
-          { provide: PreferencesRepository, useClass: StubPreferencesRepository },
+          { provide: PreferencesRepository, useValue: preferences },
         ],
       },
     });
@@ -117,6 +135,71 @@ describe('DashboardPage', () => {
 
     expect(host.querySelectorAll('ku-module-detail-card')).toHaveLength(4);
     expect(text()).toContain('DP BAR FOR THIS MODULE');
+  });
+
+  it('renames a module through the detail card', async () => {
+    click('.placeholder--empty button');
+    await settle();
+
+    const host = fixture.nativeElement as HTMLElement;
+    host.querySelectorAll<HTMLElement>('.segmented__option')[1].click();
+    await settle();
+
+    // The pencil toggle swaps the heading for inputs.
+    host.querySelector<HTMLElement>('ku-module-detail-card .ku-icon-button')!.click();
+    await settle();
+
+    const code = host.querySelector<HTMLInputElement>('.detail__field--code')!;
+    code.value = 'inf2611';
+    code.dispatchEvent(new Event('change'));
+    await settle();
+
+    expect(repository.modules.value[0].code).toBe('INF2611');
+    expect(repository.modules.value[0].id).toBe('sample-csc2601');
+  });
+
+  it('renames an assessment through the detail card', async () => {
+    click('.placeholder--empty button');
+    await settle();
+
+    const host = fixture.nativeElement as HTMLElement;
+    host.querySelectorAll<HTMLElement>('.segmented__option')[1].click();
+    await settle();
+
+    const name = host.querySelector<HTMLInputElement>('.assessments__name')!;
+    name.value = 'Semester Test 1';
+    name.dispatchEvent(new Event('change'));
+    await settle();
+
+    const [assessment] = repository.modules.value[0].assessments;
+    expect(assessment.name).toBe('Semester Test 1');
+    expect(assessment.weight).toBe(15);
+  });
+
+  it('updates the qualification and year from the profile card', async () => {
+    click('.profile__controls .ku-button--ghost');
+    await settle();
+
+    const host = fixture.nativeElement as HTMLElement;
+    for (const [label, value] of [
+      ['Qualification', 'BSc Computer Science'],
+      ['Year of study', '2nd year'],
+    ]) {
+      const field = host.querySelector<HTMLInputElement>(`[aria-label="${label}"]`)!;
+      field.value = value;
+      field.dispatchEvent(new Event('change'));
+      await settle();
+    }
+
+    expect(preferences.preferences.value.profile).toMatchObject({
+      course: 'BSc Computer Science',
+      year: '2nd year',
+    });
+
+    // Leaving edit mode shows the saved values back on the card.
+    click('.profile__controls .ku-button--ghost');
+    await settle();
+    expect(text()).toContain('BSc Computer Science  ·  2nd year');
   });
 
   it('asks for confirmation before clearing everything', async () => {

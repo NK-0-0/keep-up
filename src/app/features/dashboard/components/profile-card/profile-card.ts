@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { Profile } from '../../../../domain/models';
+import { Avatar } from '../../../../shared/avatar/avatar';
 import { ThresholdStepper } from '../../../../shared/threshold-stepper/threshold-stepper';
 
 /** Student identity card, with the default DP bar that new modules inherit. */
 @Component({
   selector: 'ku-profile-card',
-  imports: [ThresholdStepper],
+  imports: [Avatar, ThresholdStepper],
   templateUrl: './profile-card.html',
   styleUrl: './profile-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -13,6 +14,7 @@ import { ThresholdStepper } from '../../../../shared/threshold-stepper/threshold
 export class ProfileCard {
   readonly profile = input.required<Profile>();
   readonly initials = input.required<string>();
+  readonly photoUrl = input<string | null>(null);
   readonly defaultThreshold = input.required<number>();
 
   readonly profileChange = output<Partial<Profile>>();

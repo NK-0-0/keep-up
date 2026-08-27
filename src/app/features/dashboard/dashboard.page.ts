@@ -12,6 +12,7 @@ import {
 import { ProfileCard } from './components/profile-card/profile-card';
 import { SemesterOverview } from './components/semester-overview/semester-overview';
 import { SiteHeader } from './components/site-header/site-header';
+import { Spinner } from '../../shared/spinner/spinner';
 
 type ViewMode = 'glance' | 'detail';
 
@@ -21,7 +22,7 @@ type ViewMode = 'glance' | 'detail';
  */
 @Component({
   selector: 'ku-dashboard',
-  imports: [SiteHeader, ProfileCard, SemesterOverview, ModuleGlanceCard, ModuleDetailCard],
+  imports: [SiteHeader, ProfileCard, SemesterOverview, ModuleGlanceCard, ModuleDetailCard, Spinner],
   // Provided here rather than in the (eagerly evaluated) route table so the
   // Firestore SDK is bundled with this lazy chunk, not the initial download.
   providers: [provideKeepUpData()],
@@ -40,6 +41,7 @@ export class DashboardPage {
   protected readonly view = signal<ViewMode>('glance');
   protected readonly addingModule = signal(false);
   protected readonly confirmingClear = signal(false);
+  protected readonly signingOut = signal(false);
   protected readonly newCode = signal('');
   protected readonly newTitle = signal('');
 
@@ -78,6 +80,10 @@ export class DashboardPage {
     this.store.addAssessment(moduleId, assessment.name, assessment.weight, assessment.mark);
   }
 
+  protected renameAssessment(moduleId: string, change: AssessmentFieldChange): void {
+    this.store.setAssessmentName(moduleId, change.assessmentId, change.value);
+  }
+
   protected changeWeight(moduleId: string, change: AssessmentFieldChange): void {
     this.store.setAssessmentWeight(moduleId, change.assessmentId, change.value);
   }
@@ -92,7 +98,14 @@ export class DashboardPage {
     else this.newTitle.set(value);
   }
 
-  protected signOut(): void {
-    void this.auth.signOut();
+  protected async signOut(): Promise<void> {
+    // `SessionRedirect` handles the navigation once Firebase reports the
+    // session has ended; this only drives the button's busy state.
+    this.signingOut.set(true);
+    try {
+      await this.auth.signOut();
+    } finally {
+      this.signingOut.set(false);
+    }
   }
 }

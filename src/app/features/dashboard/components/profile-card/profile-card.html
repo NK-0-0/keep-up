@@ -1,5 +1,5 @@
 <section class="profile ku-card">
-  <span class="profile__avatar" aria-hidden="true">{{ initials() }}</span>
+  <ku-avatar variant="gradient" [photoUrl]="photoUrl()" [initials]="initials()" [size]="62" />
 
   <div class="profile__identity">
     @if (editing()) {

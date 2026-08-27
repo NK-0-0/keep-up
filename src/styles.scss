@@ -220,6 +220,44 @@ input[type='number'] {
   }
 }
 
+.ku-icon-button {
+  border: none;
+  background: transparent;
+  color: var(--ku-text-faint);
+  cursor: pointer;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 800;
+
+  &:hover {
+    color: var(--ku-red);
+  }
+
+  &--outlined {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #2a2f35;
+    border-radius: var(--ku-radius-sm);
+    font-size: 16px;
+    line-height: 1;
+    flex: none;
+
+    &:hover {
+      border-color: var(--ku-red-border);
+    }
+  }
+
+  /* The rename toggle is not destructive, so it keeps the mint accent. */
+  &--active,
+  &--active:hover {
+    color: var(--ku-mint);
+    border-color: var(--ku-mint-deep);
+  }
+}
+
 .ku-visually-hidden {
   position: absolute;
   width: 1px;

@@ -1,21 +1,60 @@
 <article class="detail ku-card">
   <header class="detail__header">
     <div class="detail__identity">
-      <div class="detail__tags">
-        <span class="detail__code">{{ module().code }}</span>
-        <span class="ku-badge">{{ statusLabel() }}</span>
-      </div>
-      <h3 class="detail__title">{{ module().title }}</h3>
+      @if (editingIdentity()) {
+        <div class="detail__fields">
+          <input
+            class="ku-input detail__field detail__field--code"
+            [value]="module().code"
+            [attr.aria-label]="'Code for ' + module().title"
+            (change)="onCode($event)"
+          />
+          <input
+            class="ku-input detail__field"
+            [value]="module().title"
+            [attr.aria-label]="'Name for ' + module().code"
+            (change)="onTitle($event)"
+          />
+        </div>
+      } @else {
+        <div class="detail__tags">
+          <span class="detail__code">{{ module().code }}</span>
+          <span class="ku-badge">{{ statusLabel() }}</span>
+        </div>
+        <h3 class="detail__title">{{ module().title }}</h3>
+      }
     </div>
 
-    <button
-      type="button"
-      class="icon-button icon-button--outlined"
-      [attr.aria-label]="'Remove ' + module().code"
-      (click)="moduleRemoved.emit()"
-    >
-      &times;
-    </button>
+    <div class="detail__actions">
+      <button
+        type="button"
+        class="ku-icon-button ku-icon-button--outlined"
+        [class.ku-icon-button--active]="editingIdentity()"
+        [attr.aria-label]="(editingIdentity() ? 'Done editing ' : 'Rename ') + module().code"
+        [attr.aria-pressed]="editingIdentity()"
+        (click)="toggleIdentityEditing()"
+      >
+        @if (editingIdentity()) {
+          &check;
+        } @else {
+          <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">
+            <path
+              fill="currentColor"
+              d="M11.6.9a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2l-.9.9-3.5-3.5.9-.9ZM9.8 2.7l3.5 3.5-7 7a1 1 0 0 1-.5.3l-3.4.9a.6.6 0 0 1-.8-.8l.9-3.4a1 1 0 0 1 .3-.5l7-7Z"
+            />
+          </svg>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="ku-icon-button ku-icon-button--outlined"
+        [attr.aria-label]="'Remove ' + module().code"
+        (click)="moduleRemoved.emit()"
+      >
+        &times;
+      </button>
+    </div>
   </header>
 
   <div>
@@ -58,89 +97,15 @@
     />
   </div>
 
-  <div class="assessments">
-    <div class="assessments__head" aria-hidden="true">
-      <span>ASSESSMENT</span>
-      <span class="assessments__centred">WEIGHT</span>
-      <span class="assessments__centred">YOUR %</span>
-      <span></span>
-    </div>
-
-    @for (assessment of module().assessments; track assessment.id) {
-      <div class="assessments__row">
-        <span class="assessments__name" [title]="assessment.name">{{ assessment.name }}</span>
-
-        <input
-          class="ku-input ku-input--numeric assessments__field"
-          inputmode="numeric"
-          [value]="assessment.weight"
-          [attr.aria-label]="assessment.name + ' weight, percent of the module'"
-          (change)="onWeight(assessment.id, $event)"
-        />
-
-        <input
-          class="ku-input ku-input--numeric assessments__field assessments__field--mark"
-          inputmode="numeric"
-          placeholder="—"
-          [class.assessments__field--graded]="assessment.mark !== null"
-          [value]="assessment.mark ?? ''"
-          [attr.aria-label]="assessment.name + ' mark, percent'"
-          (change)="onMark(assessment.id, $event)"
-        />
-
-        <button
-          type="button"
-          class="icon-button"
-          [attr.aria-label]="'Delete ' + assessment.name"
-          (click)="assessmentRemoved.emit(assessment.id)"
-        >
-          &times;
-        </button>
-      </div>
-    } @empty {
-      <p class="assessments__empty">No assessments yet — add the ones that count towards DP.</p>
-    }
-
-    @if (addOpen()) {
-      <div class="assessments__row assessments__row--draft">
-        <input
-          class="ku-input assessments__field assessments__field--draft"
-          placeholder="Test 1 / Assignment 2"
-          aria-label="New assessment name"
-          [value]="draftName()"
-          (input)="onDraft('name', $event)"
-        />
-        <input
-          class="ku-input ku-input--numeric assessments__field assessments__field--draft"
-          inputmode="numeric"
-          placeholder="20"
-          aria-label="New assessment weight"
-          [value]="draftWeight()"
-          (input)="onDraft('weight', $event)"
-        />
-        <input
-          class="ku-input ku-input--numeric assessments__field assessments__field--draft"
-          inputmode="numeric"
-          placeholder="—"
-          aria-label="New assessment mark"
-          [value]="draftMark()"
-          (input)="onDraft('mark', $event)"
-        />
-        <button
-          type="button"
-          class="save-button"
-          aria-label="Save assessment"
-          (click)="saveDraft()"
-        >
-          &check;
-        </button>
-      </div>
-    }
-
-    <button type="button" class="add-button" (click)="toggleAdd()">
-      {{ addOpen() ? 'Cancel' : '+ Add assessment' }}
-    </button>
-  </div>
+  <ku-assessment-table
+    [assessments]="module().assessments"
+    [moduleCode]="module().code"
+    (nameChanged)="assessmentRenamed.emit($event)"
+    (weightChanged)="weightChanged.emit($event)"
+    (markChanged)="markChanged.emit($event)"
+    (removed)="assessmentRemoved.emit($event)"
+    (added)="assessmentAdded.emit($event)"
+  />
 
   <footer class="verdict">
     <p class="verdict__text">{{ evaluation().verdict }}</p>

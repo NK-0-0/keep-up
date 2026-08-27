@@ -7,19 +7,6 @@
   margin-bottom: 18px;
 }
 
-.profile__avatar {
-  width: 62px;
-  height: 62px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--ku-mint), var(--ku-mint-deep));
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-  font-weight: 900;
-  color: var(--ku-mint-ink);
-  flex: none;
-}
-
 .profile__identity {
   flex: 1 1 240px;
   min-width: 0;

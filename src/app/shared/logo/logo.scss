@@ -1,0 +1,23 @@
+:host {
+  display: inline-flex;
+  flex: none;
+}
+
+.logo {
+  display: block;
+}
+
+.logo__badge {
+  fill: var(--ku-mint);
+}
+
+.logo__bars rect {
+  fill: var(--ku-mint-ink);
+}
+
+.logo__threshold {
+  stroke: var(--ku-mint-ink);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  opacity: 0.38;
+}

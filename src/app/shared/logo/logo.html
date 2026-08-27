@@ -1,0 +1,20 @@
+<svg
+  class="logo"
+  viewBox="0 0 40 40"
+  role="img"
+  aria-label="KeepUp"
+  [attr.width]="size()"
+  [attr.height]="size()"
+>
+  <rect class="logo__badge" width="40" height="40" rx="13" />
+
+  <!-- Drawn before the bars so the tallest one passes in front of it, which is
+       the whole idea: that module has cleared the DP bar. -->
+  <line class="logo__threshold" x1="6.5" y1="15" x2="33.5" y2="15" />
+
+  <g class="logo__bars">
+    <rect x="8" y="22" width="6" height="9" rx="2" />
+    <rect x="17" y="17.5" width="6" height="13.5" rx="2" />
+    <rect x="26" y="9.5" width="6" height="21.5" rx="2" />
+  </g>
+</svg>

@@ -24,18 +24,6 @@
   margin-right: auto;
 }
 
-.brand__mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 14px;
-  background: var(--ku-mint);
-  display: grid;
-  place-items: center;
-  font-weight: 900;
-  font-size: 19px;
-  color: var(--ku-mint-ink);
-}
-
 .brand__text {
   display: flex;
   flex-direction: column;
@@ -78,19 +66,13 @@
   color: var(--ku-mint);
 }
 
-.avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 999px;
-  background: var(--ku-chip);
-  border: 1px solid #313740;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-  font-weight: 900;
-  color: var(--ku-text-bright);
-}
+.sign-out {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 
-.avatar--photo {
-  object-fit: cover;
+  &:disabled {
+    cursor: progress;
+    opacity: 0.7;
+  }
 }

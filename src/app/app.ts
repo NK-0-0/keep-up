@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { SessionRedirect } from './core/auth/session-redirect';
 import { LoadingService } from './core/http/loading.service';
 import { NotificationHost } from './core/notifications/notification-host/notification-host';
 
@@ -12,4 +13,10 @@ import { NotificationHost } from './core/notifications/notification-host/notific
 })
 export class App {
   protected readonly loading = inject(LoadingService);
+
+  /**
+   * Instantiated for its effect: returns the student to sign-in when their
+   * session ends, from this tab or another.
+   */
+  private readonly sessionRedirect = inject(SessionRedirect);
 }

@@ -58,6 +58,29 @@ export function normaliseMark(value: string | number | null | undefined): number
   return parsed === null ? null : clampPercent(parsed);
 }
 
+/**
+ * Applies an edit to a module's identity. A field left blank keeps its previous
+ * value — clearing the box should not wipe the module's name.
+ */
+export function renameModule(
+  module: Module,
+  changes: { readonly code?: string; readonly title?: string },
+): Module {
+  return {
+    ...module,
+    code: changes.code === undefined ? module.code : normaliseCode(changes.code, module.code),
+    title: changes.title === undefined ? module.title : normaliseText(changes.title, module.title),
+  };
+}
+
+export function normaliseCode(value: string, fallback: string): string {
+  return value.trim().toUpperCase() || fallback;
+}
+
+export function normaliseText(value: string, fallback: string): string {
+  return value.trim() || fallback;
+}
+
 export function addAssessment(module: Module, assessment: Assessment): Module {
   return { ...module, assessments: [...module.assessments, assessment] };
 }
