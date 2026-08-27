@@ -1,0 +1,22 @@
+<section class="overview">
+  <div class="overview__copy">
+    <p class="overview__eyebrow">WHERE YOU STAND</p>
+    <h1 class="overview__title">{{ summary().title }}</h1>
+    <p class="overview__subtitle">{{ summary().subtitle }}</p>
+  </div>
+
+  <dl class="overview__stats">
+    <div class="stat stat--secured">
+      <dd class="stat__value">{{ summary().secured }}</dd>
+      <dt class="stat__label">DP secured</dt>
+    </div>
+    <div class="stat stat--working">
+      <dd class="stat__value">{{ summary().inProgress }}</dd>
+      <dt class="stat__label">Still working</dt>
+    </div>
+    <div class="stat stat--missed">
+      <dd class="stat__value">{{ summary().missed }}</dd>
+      <dt class="stat__label">No DP</dt>
+    </div>
+  </dl>
+</section>

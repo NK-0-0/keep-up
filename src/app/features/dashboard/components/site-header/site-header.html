@@ -1,0 +1,28 @@
+<header class="header">
+  <div class="header__shell">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">K</span>
+      <span class="brand__text">
+        <span class="brand__name">KeepUp</span>
+        <span class="brand__tagline">EXAM ENTRY TRACKER</span>
+      </span>
+    </div>
+
+    <p class="threshold-pill">
+      <span class="threshold-pill__label">Default DP bar</span>
+      <span class="threshold-pill__value">{{ defaultThreshold() }}%</span>
+    </p>
+
+    @if (photoUrl(); as photo) {
+      <img class="avatar avatar--photo" [src]="photo" alt="" width="38" height="38" />
+    } @else {
+      <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+    }
+
+    @if (showSignOut()) {
+      <button type="button" class="ku-button ku-button--ghost" (click)="signOut.emit()">
+        Sign out
+      </button>
+    }
+  </div>
+</header>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet" />
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #101214; color: #f2f3f5; font-family: Nunito, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: #5fd8a0; text-decoration: none; }
+a:hover { color: #8fe8bd; }
+input, button { font-family: inherit; }
+input::placeholder { color: #5c636c; }
+input[type=number] { -moz-appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+::selection { background: #5fd8a0; color: #101214; }
+@keyframes kuPop { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(1200px 600px at 15% -10%, #1b2622 0%, #101214 60%)">
+
+  <header style="position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);background:rgba(16,18,20,.82);border-bottom:1px solid #23272c">
+    <div style="max-width:1180px;margin:0 auto;padding:16px 28px;display:flex;align-items:center;gap:16px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div style="width:38px;height:38px;border-radius:14px;background:#5fd8a0;display:grid;place-items:center;font-weight:900;font-size:19px;color:#0d1a14">K</div>
+        <div style="display:flex;flex-direction:column">
+          <span style="font-weight:900;font-size:20px;letter-spacing:-.4px">KeepUp</span>
+          <span style="font-size:11.5px;font-weight:700;color:#7f8791;letter-spacing:.3px">EXAM ENTRY TRACKER</span>
+        </div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;border-radius:999px;background:#191d21;border:1px solid #262b31">
+        <span style="font-size:13px;font-weight:700;color:#8b929b;white-space:nowrap">Default DP bar</span>
+        <span style="font-size:15px;font-weight:900;color:#5fd8a0">{{ defaultThresholdTxt }}</span>
+      </div>
+      <div style="width:38px;height:38px;border-radius:999px;background:#22272c;border:1px solid #313740;display:grid;place-items:center;font-size:14px;font-weight:900;color:#c8cfd6">{{ initials }}</div>
+    </div>
+  </header>
+
+  <main style="max-width:1180px;margin:0 auto;padding:34px 28px 0">
+
+    <section style="display:flex;flex-wrap:wrap;gap:22px;align-items:center;padding:22px 26px;border-radius:24px;background:#171a1e;border:1px solid #262b31;margin-bottom:18px">
+      <div style="width:62px;height:62px;border-radius:999px;background:linear-gradient(135deg,#5fd8a0,#33ac7d);display:grid;place-items:center;font-size:22px;font-weight:900;color:#0d1a14;flex:none">{{ initials }}</div>
+      <div style="flex:1 1 240px;min-width:0">
+        <sc-if value="{{ editingProfile }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <input value="{{ profileName }}" onChange="{{ onName }}" placeholder="Your name" style="flex:1 1 180px;padding:10px 13px;border-radius:12px;border:1px solid #33ac7d;background:#101315;color:#f2f3f5;font-size:15px;font-weight:800;outline:none" />
+            <input value="{{ profileCourse }}" onChange="{{ onCourse }}" placeholder="Qualification" style="flex:1 1 180px;padding:10px 13px;border-radius:12px;border:1px solid #2c3238;background:#101315;color:#f2f3f5;font-size:14px;font-weight:600;outline:none" style-focus="border-color:#5fd8a0" />
+            <input value="{{ profileYear }}" onChange="{{ onYear }}" placeholder="Year of study" style="width:130px;padding:10px 13px;border-radius:12px;border:1px solid #2c3238;background:#101315;color:#f2f3f5;font-size:14px;font-weight:600;outline:none" style-focus="border-color:#5fd8a0" />
+          </div>
+        </sc-if>
+        <sc-if value="{{ notEditingProfile }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;line-height:1.2">{{ profileName }}</div>
+            <div style="font-size:14px;font-weight:700;color:#8b929b;margin-top:3px">{{ profileMeta }}</div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:16px;background:#101315;border:1px solid #262b31">
+          <div>
+            <div style="font-size:11px;font-weight:900;letter-spacing:.8px;color:#6d757e">DEFAULT DP BAR</div>
+            <div style="font-size:12.5px;font-weight:700;color:#8b929b;margin-top:2px;white-space:nowrap">Starting point for new modules</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <button onClick="{{ onDefaultDown }}" style="border:1px solid #2c3238;background:#191d21;color:#c8cfd6;cursor:pointer;width:32px;height:36px;border-radius:11px;font-size:17px;font-weight:900;line-height:1" style-hover="border-color:#5fd8a0;color:#5fd8a0">−</button>
+            <input value="{{ defaultThresholdVal }}" onChange="{{ onDefaultThreshold }}" inputMode="numeric" style="width:56px;text-align:center;padding:9px 4px;border-radius:11px;border:1px solid #2c3238;background:#191d21;color:#5fd8a0;font-size:17px;font-weight:900;outline:none" style-focus="border-color:#5fd8a0" />
+            <button onClick="{{ onDefaultUp }}" style="border:1px solid #2c3238;background:#191d21;color:#c8cfd6;cursor:pointer;width:32px;height:36px;border-radius:11px;font-size:17px;font-weight:900;line-height:1" style-hover="border-color:#5fd8a0;color:#5fd8a0">+</button>
+          </div>
+        </div>
+        <button onClick="{{ onToggleProfile }}" style="border:1px solid #2c3238;background:transparent;color:#9aa2ab;cursor:pointer;padding:11px 18px;border-radius:999px;font-size:13.5px;font-weight:800;white-space:nowrap" style-hover="color:#5fd8a0;border-color:#33ac7d">{{ editProfileLabel }}</button>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-end;padding:30px 32px;border-radius:26px;background:linear-gradient(135deg,#1a2620 0%,#171a1e 55%);border:1px solid #29332e;margin-bottom:30px">
+      <div style="flex:1 1 340px;min-width:300px">
+        <div style="font-size:12.5px;font-weight:800;letter-spacing:1.4px;color:#5fd8a0;margin-bottom:12px">WHERE YOU STAND</div>
+        <h1 style="margin:0 0 10px;font-size:37px;line-height:1.1;font-weight:900;letter-spacing:-1px;text-wrap:pretty">{{ overallTitle }}</h1>
+        <p style="margin:0;font-size:16.5px;line-height:1.5;color:#a4abb4;max-width:46ch;text-wrap:pretty">{{ overallSub }}</p>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="padding:16px 22px;border-radius:18px;background:rgba(95,216,160,.1);border:1px solid rgba(95,216,160,.28);min-width:112px">
+          <div style="font-size:31px;font-weight:900;color:#5fd8a0;line-height:1">{{ countSafe }}</div>
+          <div style="font-size:12.5px;font-weight:700;color:#8fbfa8;margin-top:5px">DP secured</div>
+        </div>
+        <div style="padding:16px 22px;border-radius:18px;background:rgba(242,166,60,.09);border:1px solid rgba(242,166,60,.26);min-width:112px">
+          <div style="font-size:31px;font-weight:900;color:#f2a63c;line-height:1">{{ countWork }}</div>
+          <div style="font-size:12.5px;font-weight:700;color:#c19a63;margin-top:5px">Still working</div>
+        </div>
+        <div style="padding:16px 22px;border-radius:18px;background:rgba(242,96,122,.08);border:1px solid rgba(242,96,122,.24);min-width:112px">
+          <div style="font-size:31px;font-weight:900;color:#f2607a;line-height:1">{{ countGone }}</div>
+          <div style="font-size:12.5px;font-weight:700;color:#c1798a;margin-top:5px">No DP</div>
+        </div>
+      </div>
+    </section>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px">
+      <h2 style="margin:0;font-size:21px;font-weight:800;letter-spacing:-.3px">Your modules</h2>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:4px;padding:4px;border-radius:999px;background:#171a1e;border:1px solid #262b31">
+        <button onClick="{{ onGlance }}" style="border:none;cursor:pointer;padding:8px 16px;border-radius:999px;font-size:13.5px;font-weight:800;white-space:nowrap;background: {{ glanceBg }};color: {{ glanceFg }}">At a glance</button>
+        <button onClick="{{ onDetail }}" style="border:none;cursor:pointer;padding:8px 16px;border-radius:999px;font-size:13.5px;font-weight:800;white-space:nowrap;background: {{ detailBg }};color: {{ detailFg }}">Full detail</button>
+      </div>
+      <button onClick="{{ onToggleAddModule }}" style="border:none;cursor:pointer;padding:11px 20px;border-radius:999px;background:#5fd8a0;color:#0d1a14;font-size:14.5px;font-weight:800;transition:transform .15s ease,box-shadow .15s ease" style-hover="transform:translateY(-1px);box-shadow:0 8px 22px rgba(95,216,160,.28)">{{ addModuleLabel }}</button>
+    </div>
+
+    <sc-if value="{{ showAddModule }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:kuPop .22s ease both;display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:18px;border-radius:20px;background:#161a1e;border:1px dashed #33ac7d;margin-bottom:18px">
+        <input value="{{ newCode }}" onChange="{{ onNewCode }}" placeholder="Code — e.g. CSC2601" style="width:190px;padding:12px 15px;border-radius:13px;border:1px solid #2c3238;background:#101315;color:#f2f3f5;font-size:14.5px;font-weight:800;outline:none" style-focus="border-color:#5fd8a0" />
+        <input value="{{ newTitle }}" onChange="{{ onNewTitle }}" placeholder="Module name" style="flex:1 1 240px;padding:12px 15px;border-radius:13px;border:1px solid #2c3238;background:#101315;color:#f2f3f5;font-size:14.5px;font-weight:600;outline:none" style-focus="border-color:#5fd8a0" />
+        <button onClick="{{ onAddModule }}" style="border:none;cursor:pointer;padding:12px 22px;border-radius:13px;background:#5fd8a0;color:#0d1a14;font-size:14.5px;font-weight:800">Add module</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:60px 30px;text-align:center;border-radius:24px;border:1px dashed #2b3037;background:#14171a">
+        <div style="font-size:19px;font-weight:800;margin-bottom:8px">Nothing here yet</div>
+        <p style="margin:0 0 20px;color:#8b929b;font-size:15px">Add your first module, then list the assessments that count towards it.</p>
+        <button onClick="{{ onLoadSample }}" style="border:1px solid #2c3238;cursor:pointer;padding:11px 20px;border-radius:999px;background:#1b1f23;color:#f2f3f5;font-size:14px;font-weight:800">Load sample semester</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isGlance }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:16px">
+        <sc-for list="{{ modules }}" as="m" hint-placeholder-count="4">
+          <article style="border-radius:24px;background:#171a1e;border:1px solid #262b31;padding:24px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;transition:transform .18s ease,border-color .18s ease" style-hover="transform:translateY(-3px);border-color:#343a41">
+            <div style="width:132px;height:132px;border-radius:999px;display:grid;place-items:center;background: {{ m.ring }}">
+              <div style="width:104px;height:104px;border-radius:999px;background:#171a1e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
+                <span style="font-size:31px;font-weight:900;letter-spacing:-1.4px;line-height:1;color: {{ m.statusColor }}">{{ m.earnedTxt }}</span>
+                <span style="font-size:10.5px;font-weight:900;letter-spacing:.7px;color:#6d757e">OF 100</span>
+              </div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:14.5px;font-weight:900;letter-spacing:.6px;color:#c8cfd6">{{ m.code }}</div>
+              <div style="font-size:14px;font-weight:700;color:#8b929b;margin-top:2px;text-wrap:pretty">{{ m.title }}</div>
+            </div>
+            <span style="padding:5px 12px;border-radius:999px;font-size:11.5px;font-weight:900;letter-spacing:.4px;text-align:center;background: {{ m.statusBg }};color: {{ m.statusColor }}">{{ m.statusLabel }}</span>
+            <div style="font-size:12.5px;font-weight:700;text-align:center;color:#7f8791;text-wrap:pretty">{{ m.shortNote }}</div>
+          </article>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:20px">
+      <sc-for list="{{ modules }}" as="m" hint-placeholder-count="3">
+        <article style="border-radius:24px;background:#171a1e;border:1px solid #262b31;padding:22px 22px 18px;display:flex;flex-direction:column;gap:16px">
+
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px">
+                <span style="padding:4px 10px;border-radius:8px;background:#22272c;font-size:12.5px;font-weight:900;letter-spacing:.6px;color:#c8cfd6">{{ m.code }}</span>
+                <span style="padding:4px 11px;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:.4px;background: {{ m.statusBg }};color: {{ m.statusColor }}">{{ m.statusLabel }}</span>
+              </div>
+              <div style="font-size:18px;font-weight:800;letter-spacing:-.3px;line-height:1.25;text-wrap:pretty">{{ m.title }}</div>
+            </div>
+            <button onClick="{{ m.onDelete }}" title="Remove module" style="border:1px solid #2a2f35;background:transparent;color:#6d757e;cursor:pointer;width:32px;height:32px;border-radius:10px;font-size:16px;font-weight:800;line-height:1;flex:none" style-hover="color:#f2607a;border-color:#4a2b33">×</button>
+          </div>
+
+          <div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px">
+              <span style="font-size:40px;font-weight:900;letter-spacing:-1.6px;line-height:1;color: {{ m.statusColor }}">{{ m.earnedTxt }}</span>
+              <span style="font-size:14px;font-weight:700;color:#8b929b">banked of 100</span>
+              <span style="flex:1"></span>
+              <span style="font-size:13px;font-weight:700;color:#7f8791">{{ m.gradedTxt }}</span>
+            </div>
+            <div style="position:relative;height:14px;border-radius:999px;background:#22272c;overflow:hidden">
+              <div style="position:absolute;inset:0 auto 0 0;border-radius:999px;background:rgba(95,216,160,.16);width: {{ m.potentialPct }}%"></div>
+              <div style="position:absolute;inset:0 auto 0 0;border-radius:999px;background: {{ m.statusColor }};width: {{ m.barPct }}%;transition:width .4s cubic-bezier(.2,.8,.2,1)"></div>
+            </div>
+            <div style="position:relative;height:18px">
+              <div style="position:absolute;top:-14px;width:2px;height:14px;background:#f2f3f5;opacity:.55;left: {{ m.thresholdPct }}%"></div>
+              <div style="position:absolute;top:2px;transform:translateX(-50%);font-size:11px;font-weight:800;color:#8b929b;white-space:nowrap;left: {{ m.thresholdPct }}%">DP {{ m.thresholdTxt }}</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 14px;border-radius:16px;background:#101315;border:1px solid #23272c">
+            <div style="flex:1;min-width:120px">
+              <div style="font-size:11px;font-weight:900;letter-spacing:.8px;color:#6d757e">DP BAR FOR THIS MODULE</div>
+              <div style="font-size:12.5px;font-weight:700;color:#8b929b;margin-top:2px">Mark needed to write the exam</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <button onClick="{{ m.onThresholdDown }}" style="border:1px solid #2c3238;background:#191d21;color:#c8cfd6;cursor:pointer;width:30px;height:34px;border-radius:10px;font-size:16px;font-weight:900;line-height:1" style-hover="border-color:#5fd8a0;color:#5fd8a0">−</button>
+              <input value="{{ m.thresholdVal }}" onChange="{{ m.onThreshold }}" inputMode="numeric" style="width:54px;text-align:center;padding:8px 4px;border-radius:10px;border:1px solid #2c3238;background:#191d21;color:#5fd8a0;font-size:16px;font-weight:900;outline:none" style-focus="border-color:#5fd8a0" />
+              <button onClick="{{ m.onThresholdUp }}" style="border:1px solid #2c3238;background:#191d21;color:#c8cfd6;cursor:pointer;width:30px;height:34px;border-radius:10px;font-size:16px;font-weight:900;line-height:1" style-hover="border-color:#5fd8a0;color:#5fd8a0">+</button>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div style="display:grid;grid-template-columns:1fr 74px 82px 30px;gap:8px;padding:0 4px;font-size:11px;font-weight:900;letter-spacing:.7px;color:#6d757e">
+              <span>ASSESSMENT</span>
+              <span style="text-align:center">WEIGHT</span>
+              <span style="text-align:center">YOUR %</span>
+              <span></span>
+            </div>
+            <sc-for list="{{ m.assessments }}" as="a" hint-placeholder-count="3">
+              <div style="display:grid;grid-template-columns:1fr 74px 82px 30px;gap:8px;align-items:center">
+                <div style="min-width:0;padding:9px 12px;border-radius:12px;background:#1d2126;font-size:14.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.name }}</div>
+                <input value="{{ a.weight }}" onChange="{{ a.onWeight }}" inputMode="numeric" style="width:100%;text-align:center;padding:9px 6px;border-radius:12px;border:1px solid #2c3238;background:#101315;color:#c8cfd6;font-size:14.5px;font-weight:800;outline:none" style-focus="border-color:#5fd8a0" />
+                <input value="{{ a.mark }}" onChange="{{ a.onMark }}" inputMode="numeric" placeholder="—" style="width:100%;text-align:center;padding:9px 6px;border-radius:12px;border:1px solid #2c3238;background: {{ a.markBg }};color: {{ a.markColor }};font-size:14.5px;font-weight:900;outline:none" style-focus="border-color:#5fd8a0" />
+                <button onClick="{{ a.onDelete }}" title="Delete assessment" style="border:none;background:transparent;color:#5c636c;cursor:pointer;height:30px;border-radius:9px;font-size:15px;font-weight:800" style-hover="color:#f2607a">×</button>
+              </div>
+            </sc-for>
+
+            <sc-if value="{{ m.addOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="animation:kuPop .2s ease both;display:grid;grid-template-columns:1fr 74px 82px 30px;gap:8px;align-items:center">
+                <input value="{{ draftName }}" onChange="{{ onDraftName }}" placeholder="Test 1 / Assignment 2" style="min-width:0;padding:9px 12px;border-radius:12px;border:1px solid #33ac7d;background:#101315;color:#f2f3f5;font-size:14.5px;font-weight:700;outline:none" />
+                <input value="{{ draftWeight }}" onChange="{{ onDraftWeight }}" inputMode="numeric" placeholder="20" style="width:100%;text-align:center;padding:9px 6px;border-radius:12px;border:1px solid #33ac7d;background:#101315;color:#f2f3f5;font-size:14.5px;font-weight:800;outline:none" />
+                <input value="{{ draftMark }}" onChange="{{ onDraftMark }}" inputMode="numeric" placeholder="—" style="width:100%;text-align:center;padding:9px 6px;border-radius:12px;border:1px solid #33ac7d;background:#101315;color:#f2f3f5;font-size:14.5px;font-weight:900;outline:none" />
+                <button onClick="{{ m.onSaveDraft }}" title="Save" style="border:none;background:#5fd8a0;color:#0d1a14;cursor:pointer;height:34px;border-radius:10px;font-size:15px;font-weight:900">✓</button>
+              </div>
+            </sc-if>
+
+            <button onClick="{{ m.onToggleAdd }}" style="margin-top:2px;align-self:flex-start;white-space:nowrap;border:1px dashed #343a41;background:transparent;color:#9aa2ab;cursor:pointer;padding:8px 15px;border-radius:11px;font-size:13.5px;font-weight:800" style-hover="color:#5fd8a0;border-color:#33ac7d">{{ m.addLabel }}</button>
+          </div>
+
+          <div style="margin-top:auto;padding-top:14px;border-top:1px solid #23272c;display:flex;flex-direction:column;gap:7px">
+            <div style="font-size:14px;font-weight:700;line-height:1.45;color: {{ m.verdictColor }};text-wrap:pretty">{{ m.verdict }}</div>
+            <sc-if value="{{ m.hasWarn }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:13px;font-weight:700;color:#f2a63c">{{ m.warn }}</div>
+            </sc-if>
+          </div>
+
+        </article>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <footer style="margin-top:38px;padding:20px 4px 0;border-top:1px solid #22262b;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+      <span style="font-size:13.5px;font-weight:700;color:#6d757e">Saved on this device automatically.</span>
+      <button onClick="{{ onReset }}" style="border:1px solid #2a2f35;background:transparent;color:#7f8791;cursor:pointer;padding:9px 16px;border-radius:999px;font-size:13px;font-weight:800" style-hover="color:#f2607a;border-color:#4a2b33">Clear everything</button>
+    </footer>
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;threshold&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:30,&quot;max&quot;:80,&quot;step&quot;:5,&quot;unit&quot;:&quot;%&quot;,&quot;section&quot;:&quot;Rules&quot;},&quot;checkWeights&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Rules&quot;},&quot;showProjection&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Rules&quot;},&quot;seedSample&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Rules&quot;}}">
+const KEY = 'keepup.modules.v2';
+const PREFS = 'keepup.prefs.v1';
+
+const SAMPLE = [
+  { id: 'm1', code: 'CSC2601', title: 'Database Systems', assessments: [
+    { id: 'a1', name: 'Assignment 1', weight: 15, mark: 78 },
+    { id: 'a2', name: 'Test 1', weight: 25, mark: 64 },
+    { id: 'a3', name: 'Project', weight: 30, mark: null },
+    { id: 'a4', name: 'Test 2', weight: 30, mark: null }
+  ]},
+  { id: 'm2', code: 'MAT1512', title: 'Calculus A', threshold: 40, assessments: [
+    { id: 'b1', name: 'Test 1', weight: 30, mark: 41 },
+    { id: 'b2', name: 'Test 2', weight: 30, mark: 38 },
+    { id: 'b3', name: 'Assignment 2', weight: 40, mark: null }
+  ]},
+  { id: 'm3', code: 'ECO1101', title: 'Microeconomics', assessments: [
+    { id: 'c1', name: 'Essay', weight: 20, mark: 72 },
+    { id: 'c2', name: 'Test 1', weight: 40, mark: 81 },
+    { id: 'c3', name: 'Test 2', weight: 40, mark: null }
+  ]},
+  { id: 'm4', code: 'PHY1503', title: 'Mechanics', assessments: [
+    { id: 'd1', name: 'Practicals', weight: 20, mark: 30 },
+    { id: 'd2', name: 'Test 1', weight: 40, mark: 22 },
+    { id: 'd3', name: 'Test 2', weight: 20, mark: 18 },
+    { id: 'd4', name: 'Assignment', weight: 20, mark: 12 }
+  ]}
+];
+
+const MINT = '#5fd8a0', AMBER = '#f2a63c', RED = '#f2607a', DIM = '#c8cfd6';
+
+class Component extends DCLogic {
+  state = Object.assign({ modules: this.load(), showAddModule: false, newCode: '', newTitle: '', addFor: null, draftName: '', draftWeight: '', draftMark: '', view: 'glance', editingProfile: false }, this.loadPrefs());
+
+  load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return (this.props.seedSample ?? true) ? JSON.parse(JSON.stringify(SAMPLE)) : [];
+  }
+
+  loadPrefs() {
+    const base = { profile: { name: 'Thandi Mokoena', course: 'BSc Computer Science', year: '2nd year' }, threshold: this.props.threshold ?? 50 };
+    try {
+      const raw = localStorage.getItem(PREFS);
+      if (raw) return Object.assign(base, JSON.parse(raw));
+    } catch (e) {}
+    return base;
+  }
+
+  savePrefs(next) {
+    this.setState(next);
+    const merged = { profile: next.profile || this.state.profile, threshold: next.threshold ?? this.state.threshold };
+    try { localStorage.setItem(PREFS, JSON.stringify(merged)); } catch (e) {}
+  }
+
+  clampPct(v, fallback) {
+    const n = this.num(v);
+    return n === null ? fallback : Math.max(1, Math.min(100, Math.round(n)));
+  }
+
+  setThreshold(v) {
+    this.savePrefs({ threshold: this.clampPct(v, 50) });
+  }
+
+  setModuleThreshold(mid, v, fallback) {
+    const t = this.clampPct(v, fallback);
+    this.patch(mid, m => ({ ...m, threshold: t }));
+  }
+
+  setProfile(field, value) {
+    this.savePrefs({ profile: Object.assign({}, this.state.profile, { [field]: value }) });
+  }
+
+  commit(modules) {
+    this.setState({ modules });
+    try { localStorage.setItem(KEY, JSON.stringify(modules)); } catch (e) {}
+  }
+
+  num(v) { const n = parseFloat(v); return isFinite(n) ? n : null; }
+  fmt(n) { const r = Math.round(n * 10) / 10; return (Math.abs(r % 1) < 0.05 ? r.toFixed(0) : r.toFixed(1)) + '%'; }
+  uid() { return 'x' + Math.random().toString(36).slice(2, 9); }
+
+  patch(mid, fn) {
+    this.commit(this.state.modules.map(m => (m.id === mid ? fn(m) : m)));
+  }
+
+  addModule = () => {
+    const code = this.state.newCode.trim() || 'NEW101';
+    const title = this.state.newTitle.trim() || 'Untitled module';
+    this.commit([...this.state.modules, { id: this.uid(), code: code.toUpperCase(), title, assessments: [] }]);
+    this.setState({ newCode: '', newTitle: '', showAddModule: false });
+  };
+
+  saveDraft(mid) {
+    const name = this.state.draftName.trim() || 'Assessment';
+    const w = this.num(this.state.draftWeight);
+    const mk = this.num(this.state.draftMark);
+    this.patch(mid, m => ({ ...m, assessments: [...m.assessments, { id: this.uid(), name, weight: w === null ? 0 : Math.max(0, Math.min(100, w)), mark: mk === null ? null : Math.max(0, mk) }] }));
+    this.setState({ draftName: '', draftWeight: '', draftMark: '' });
+  }
+
+  compute(m) {
+    const total = m.assessments.reduce((s, a) => s + (a.weight || 0), 0);
+    const graded = m.assessments.filter(a => a.mark !== null && a.mark !== '' && a.mark !== undefined);
+    const earned = graded.reduce((s, a) => s + (a.mark / 100) * (a.weight || 0), 0);
+    const gradedWeight = graded.reduce((s, a) => s + (a.weight || 0), 0);
+    const remaining = Math.max(0, total - gradedWeight);
+    const best = earned + remaining;
+    return { total, earned, gradedWeight, remaining, best, count: graded.length };
+  }
+
+  renderVals() {
+    const defaultThreshold = this.state.threshold ?? this.props.threshold ?? 50;
+    const projection = this.props.showProjection ?? true;
+    const checkWeights = this.props.checkWeights ?? true;
+    const st = this.state;
+    let safe = 0, work = 0, gone = 0;
+
+    const modules = st.modules.map(m => {
+      const c = this.compute(m);
+      const threshold = m.threshold === null || m.threshold === undefined ? defaultThreshold : m.threshold;
+      const qualified = c.earned >= threshold;
+      const impossible = c.best < threshold - 0.0001;
+      if (qualified) safe++; else if (impossible) gone++; else work++;
+
+      const color = qualified ? MINT : impossible ? RED : AMBER;
+      const need = c.remaining > 0 ? ((threshold - c.earned) / c.remaining) * 100 : null;
+
+      let verdict;
+      if (qualified) verdict = 'DP secured — you have already banked enough to write.';
+      else if (impossible) verdict = 'Even full marks on what is left reaches ' + this.fmt(c.best) + ', short of ' + threshold + '%. Talk to your lecturer about a concession.';
+      else if (need === null) verdict = 'Nothing left to write and you are ' + this.fmt(threshold - c.earned) + ' short.';
+      else if (projection) verdict = 'Average ' + this.fmt(need) + ' on the remaining ' + this.fmt(c.remaining) + ' and you are in.';
+      else verdict = this.fmt(threshold - c.earned) + ' to go.';
+
+      const warn = c.total === 100 ? '' : c.total > 100
+        ? 'Weights add to ' + this.fmt(c.total) + ' — that is over 100.'
+        : 'Weights add to ' + this.fmt(c.total) + ' — ' + this.fmt(100 - c.total) + ' unaccounted for.';
+
+      return {
+        id: m.id, code: m.code, title: m.title,
+        statusLabel: qualified ? 'DP SECURED' : impossible ? "DIDN'T MAKE DP" : 'IN PROGRESS',
+        thresholdVal: String(threshold),
+        thresholdPct: threshold,
+        thresholdTxt: threshold + '%',
+        onThreshold: e => this.setModuleThreshold(m.id, e.target.value, threshold),
+        onThresholdUp: () => this.setModuleThreshold(m.id, threshold + 5, threshold),
+        onThresholdDown: () => this.setModuleThreshold(m.id, threshold - 5, threshold),
+        statusColor: color,
+        statusBg: qualified ? 'rgba(95,216,160,.13)' : impossible ? 'rgba(242,96,122,.13)' : 'rgba(242,166,60,.13)',
+        earnedTxt: this.fmt(c.earned),
+        gradedTxt: c.count + ' of ' + m.assessments.length + ' written',
+        barPct: Math.max(0, Math.min(100, c.earned)),
+        potentialPct: Math.max(0, Math.min(100, c.best)),
+        verdict, verdictColor: color,
+        ring: 'conic-gradient(' + color + ' ' + Math.max(0, Math.min(100, c.earned)) + '%, #23282e 0)',
+        shortNote: qualified ? 'Past the ' + threshold + '% DP bar' : impossible ? 'Cannot reach ' + threshold + '%' : need === null ? this.fmt(threshold - c.earned) + ' short of ' + threshold + '%' : 'Need ' + this.fmt(need) + ' on what is left',
+        hasWarn: checkWeights && c.total !== 100 && m.assessments.length > 0,
+        warn,
+        addOpen: st.addFor === m.id,
+        addLabel: st.addFor === m.id ? 'Cancel' : '+ Add assessment',
+        onToggleAdd: () => this.setState({ addFor: st.addFor === m.id ? null : m.id, draftName: '', draftWeight: '', draftMark: '' }),
+        onSaveDraft: () => this.saveDraft(m.id),
+        onDelete: () => this.commit(st.modules.filter(x => x.id !== m.id)),
+        assessments: m.assessments.map(a => ({
+          id: a.id, name: a.name,
+          weight: a.weight === null || a.weight === undefined ? '' : String(a.weight),
+          mark: a.mark === null || a.mark === undefined ? '' : String(a.mark),
+          markBg: a.mark === null || a.mark === undefined ? '#101315' : 'rgba(95,216,160,.07)',
+          markColor: a.mark === null || a.mark === undefined ? '#8b929b' : DIM,
+          onWeight: e => { const v = this.num(e.target.value); this.patch(m.id, mm => ({ ...mm, assessments: mm.assessments.map(x => x.id === a.id ? { ...x, weight: v === null ? 0 : Math.max(0, Math.min(100, v)) } : x) })); },
+          onMark: e => { const raw = e.target.value.trim(); const v = this.num(raw); this.patch(m.id, mm => ({ ...mm, assessments: mm.assessments.map(x => x.id === a.id ? { ...x, mark: raw === '' || v === null ? null : Math.max(0, Math.min(100, v)) } : x) })); },
+          onDelete: () => this.patch(m.id, mm => ({ ...mm, assessments: mm.assessments.filter(x => x.id !== a.id) }))
+        }))
+      };
+    });
+
+    const n = modules.length;
+    let overallTitle, overallSub;
+    if (n === 0) { overallTitle = 'Let us set up your semester'; overallSub = 'Add a module and its assessments — KeepUp works out whether you qualify for the exam.'; }
+    else if (safe === n) { overallTitle = 'DP secured in all ' + n + ' modules'; overallSub = 'Every module is past its DP bar. Keep the marks coming and you stay there.'; }
+    else if (gone === 0) { overallTitle = 'DP secured in ' + safe + ' of ' + n; overallSub = work + (work === 1 ? ' module still needs' : ' modules still need') + ' marks on the board — none of them are lost yet.'; }
+    else { overallTitle = safe + ' secured, ' + gone + ' without DP'; overallSub = gone + (gone === 1 ? ' module can' : ' modules can') + ' no longer reach the DP bar on assessment marks alone. Sort those out first.'; }
+
+    const p = st.profile || {};
+    const initials = (p.name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+
+    return {
+      modules,
+      profileName: p.name || '', profileCourse: p.course || '', profileYear: p.year || '',
+      profileMeta: [p.course, p.year].filter(Boolean).join('  ·  '),
+      initials,
+      editingProfile: st.editingProfile,
+      notEditingProfile: !st.editingProfile,
+      editProfileLabel: st.editingProfile ? 'Done' : 'Edit profile',
+      onToggleProfile: () => this.setState({ editingProfile: !st.editingProfile }),
+      onName: e => this.setProfile('name', e.target.value),
+      onCourse: e => this.setProfile('course', e.target.value),
+      onYear: e => this.setProfile('year', e.target.value),
+      defaultThresholdVal: String(defaultThreshold),
+      onDefaultThreshold: e => this.setThreshold(e.target.value),
+      onDefaultUp: () => this.setThreshold(defaultThreshold + 5),
+      onDefaultDown: () => this.setThreshold(defaultThreshold - 5),
+      isGlance: st.view === 'glance',
+      isDetail: st.view === 'detail',
+      onGlance: () => this.setState({ view: 'glance' }),
+      onDetail: () => this.setState({ view: 'detail' }),
+      glanceBg: st.view === 'glance' ? '#5fd8a0' : 'transparent',
+      glanceFg: st.view === 'glance' ? '#0d1a14' : '#8b929b',
+      detailBg: st.view === 'detail' ? '#5fd8a0' : 'transparent',
+      detailFg: st.view === 'detail' ? '#0d1a14' : '#8b929b',
+      defaultThresholdTxt: defaultThreshold + '%',
+      countSafe: safe, countWork: work, countGone: gone,
+      overallTitle, overallSub,
+      isEmpty: n === 0 && !st.showAddModule,
+      showAddModule: st.showAddModule,
+      addModuleLabel: st.showAddModule ? 'Close' : '+ New module',
+      newCode: st.newCode, newTitle: st.newTitle,
+      onNewCode: e => this.setState({ newCode: e.target.value }),
+      onNewTitle: e => this.setState({ newTitle: e.target.value }),
+      onToggleAddModule: () => this.setState({ showAddModule: !st.showAddModule }),
+      onAddModule: this.addModule,
+      draftName: st.draftName, draftWeight: st.draftWeight, draftMark: st.draftMark,
+      onDraftName: e => this.setState({ draftName: e.target.value }),
+      onDraftWeight: e => this.setState({ draftWeight: e.target.value }),
+      onDraftMark: e => this.setState({ draftMark: e.target.value }),
+      onLoadSample: () => this.commit(JSON.parse(JSON.stringify(SAMPLE))),
+      onReset: () => this.commit([])
+    };
+  }
+}
+
+</script>
+</body>
+</html>

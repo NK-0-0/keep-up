@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// KeepUp stores each student's data under their own Firebase uid. Nobody can
+// read or write another student's marks, and unauthenticated access is denied
+// outright — the client-side guards are convenience, these rules are the
+// actual boundary.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // users/{uid} — profile and the default DP bar.
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // users/{uid}/modules/{moduleId} — one document per module, with its
+      // assessments stored inline.
+      match /modules/{moduleId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Anything not matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

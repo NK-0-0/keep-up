@@ -1,0 +1,140 @@
+<ku-site-header
+  [defaultThreshold]="store.defaultThreshold()"
+  [initials]="store.initials()"
+  [photoUrl]="photoUrl()"
+  [showSignOut]="canSignOut()"
+  (signOut)="signOut()"
+/>
+
+<main class="shell">
+  <ku-profile-card
+    [profile]="store.profile()"
+    [initials]="store.initials()"
+    [defaultThreshold]="store.defaultThreshold()"
+    (profileChange)="store.updateProfile($event)"
+    (defaultThresholdChange)="store.setDefaultThreshold($event)"
+  />
+
+  <ku-semester-overview [summary]="store.summary()" />
+
+  @if (store.error(); as error) {
+    <div class="alert" role="alert">
+      <p class="alert__text">{{ error }}</p>
+      <button type="button" class="ku-button ku-button--ghost" (click)="store.dismissError()">
+        Dismiss
+      </button>
+    </div>
+  }
+
+  <div class="toolbar">
+    <h2 class="toolbar__heading">Your modules</h2>
+
+    <div class="segmented" role="group" aria-label="Module layout">
+      <button
+        type="button"
+        class="segmented__option"
+        [class.segmented__option--active]="view() === 'glance'"
+        [attr.aria-pressed]="view() === 'glance'"
+        (click)="setView('glance')"
+      >
+        At a glance
+      </button>
+      <button
+        type="button"
+        class="segmented__option"
+        [class.segmented__option--active]="view() === 'detail'"
+        [attr.aria-pressed]="view() === 'detail'"
+        (click)="setView('detail')"
+      >
+        Full detail
+      </button>
+    </div>
+
+    <button type="button" class="ku-button ku-button--primary" (click)="toggleAddModule()">
+      {{ addingModule() ? 'Close' : '+ New module' }}
+    </button>
+  </div>
+
+  @if (addingModule()) {
+    <form class="add-module" (submit)="$event.preventDefault(); addModule()">
+      <input
+        class="ku-input add-module__code"
+        placeholder="Code — e.g. CSC2601"
+        aria-label="Module code"
+        [value]="newCode()"
+        (input)="onFieldInput('code', $event)"
+      />
+      <input
+        class="ku-input add-module__title"
+        placeholder="Module name"
+        aria-label="Module name"
+        [value]="newTitle()"
+        (input)="onFieldInput('title', $event)"
+      />
+      <button type="submit" class="add-module__submit">Add module</button>
+    </form>
+  }
+
+  @if (store.loading() && store.isEmpty()) {
+    <p class="placeholder" role="status">Loading your modules…</p>
+  } @else if (showEmptyState()) {
+    <div class="placeholder placeholder--empty">
+      <p class="placeholder__title">Nothing here yet</p>
+      <p class="placeholder__body">
+        Add your first module, then list the assessments that count towards it.
+      </p>
+      <button type="button" class="ku-button ku-button--ghost" (click)="store.loadSample()">
+        Load sample semester
+      </button>
+    </div>
+  } @else if (view() === 'glance') {
+    <div class="grid grid--glance">
+      @for (evaluation of store.evaluations(); track evaluation.module.id) {
+        <ku-module-glance-card [evaluation]="evaluation" />
+      }
+    </div>
+  } @else {
+    <div class="grid grid--detail">
+      @for (evaluation of store.evaluations(); track evaluation.module.id) {
+        <ku-module-detail-card
+          [evaluation]="evaluation"
+          (thresholdChange)="store.setModuleThreshold(evaluation.module.id, $event)"
+          (moduleRemoved)="store.removeModule(evaluation.module.id)"
+          (assessmentAdded)="addAssessment(evaluation.module.id, $event)"
+          (weightChanged)="changeWeight(evaluation.module.id, $event)"
+          (markChanged)="changeMark(evaluation.module.id, $event)"
+          (assessmentRemoved)="store.removeAssessment(evaluation.module.id, $event)"
+        />
+      }
+    </div>
+  }
+
+  <footer class="footer">
+    <p class="footer__note">
+      {{
+        syncedToCloud
+          ? 'Synced to your account — open KeepUp anywhere.'
+          : 'Saved on this device automatically.'
+      }}
+    </p>
+
+    <div class="footer__actions">
+      @if (confirmingClear()) {
+        <button
+          type="button"
+          class="ku-button ku-button--ghost"
+          (click)="confirmingClear.set(false)"
+        >
+          Cancel
+        </button>
+      }
+      <button
+        type="button"
+        class="ku-button ku-button--ghost ku-button--danger"
+        (click)="clearEverything()"
+      >
+        {{ confirmingClear() ? 'Yes, delete every module' : 'Clear everything' }}
+      </button>
+    </div>
+  </footer>
+</main>

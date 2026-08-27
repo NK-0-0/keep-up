@@ -1,0 +1,15 @@
+<div class="stack" role="region" aria-label="Notifications">
+  @for (notification of notifications.notifications(); track notification.id) {
+    <output class="toast" [class]="'toast--' + notification.tone">
+      <span class="toast__message">{{ notification.message }}</span>
+      <button
+        type="button"
+        class="toast__dismiss"
+        aria-label="Dismiss notification"
+        (click)="notifications.dismiss(notification.id)"
+      >
+        &times;
+      </button>
+    </output>
+  }
+</div>

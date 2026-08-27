@@ -1,0 +1,88 @@
+:host {
+  display: block;
+}
+
+.glance {
+  height: 100%;
+  padding: 24px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--ku-border-bright);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.ring {
+  width: 132px;
+  height: 132px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--ku-status) var(--ring-sweep, 0%), #23282e 0);
+}
+
+.ring__core {
+  width: 104px;
+  height: 104px;
+  border-radius: 999px;
+  background: var(--ku-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.ring__value {
+  font-size: 31px;
+  font-weight: 900;
+  letter-spacing: -1.4px;
+  line-height: 1;
+  color: var(--ku-status);
+}
+
+.ring__scale {
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  color: var(--ku-text-faint);
+}
+
+.glance__identity {
+  text-align: center;
+}
+
+.glance__code {
+  font-size: 14.5px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  color: var(--ku-text-bright);
+}
+
+.glance__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ku-text-dim);
+  margin-top: 2px;
+  text-wrap: pretty;
+}
+
+.glance__note {
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--ku-text-dimmer);
+  text-wrap: pretty;
+  margin-top: auto;
+}

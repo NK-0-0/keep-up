@@ -1,0 +1,56 @@
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stepper__button {
+  width: 32px;
+  height: 36px;
+  border-radius: 11px;
+  border: 1px solid var(--ku-border-strong);
+  background: var(--ku-surface-raised);
+  color: var(--ku-text-bright);
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+
+  &:hover {
+    border-color: var(--ku-mint);
+    color: var(--ku-mint);
+  }
+}
+
+.stepper__input {
+  width: 56px;
+  text-align: center;
+  padding: 9px 4px;
+  border-radius: 11px;
+  border: 1px solid var(--ku-border-strong);
+  background: var(--ku-surface-raised);
+  color: var(--ku-mint);
+  font-size: 17px;
+  font-weight: 900;
+  outline: none;
+
+  &:focus {
+    border-color: var(--ku-mint);
+  }
+}
+
+.stepper--compact {
+  .stepper__button {
+    width: 30px;
+    height: 34px;
+    border-radius: var(--ku-radius-sm);
+    font-size: 16px;
+  }
+
+  .stepper__input {
+    width: 54px;
+    padding: 8px 4px;
+    border-radius: var(--ku-radius-sm);
+    font-size: 16px;
+  }
+}

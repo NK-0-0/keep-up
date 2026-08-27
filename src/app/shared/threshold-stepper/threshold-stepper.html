@@ -1,0 +1,27 @@
+<div class="stepper" [class.stepper--compact]="compact()">
+  <button
+    type="button"
+    class="stepper__button"
+    [attr.aria-label]="'Lower ' + label() + ' by ' + stepSize + ' percent'"
+    (click)="step(-stepSize)"
+  >
+    &minus;
+  </button>
+
+  <input
+    class="stepper__input"
+    inputmode="numeric"
+    [value]="value()"
+    [attr.aria-label]="label()"
+    (change)="commit($event)"
+  />
+
+  <button
+    type="button"
+    class="stepper__button"
+    [attr.aria-label]="'Raise ' + label() + ' by ' + stepSize + ' percent'"
+    (click)="step(stepSize)"
+  >
+    +
+  </button>
+</div>

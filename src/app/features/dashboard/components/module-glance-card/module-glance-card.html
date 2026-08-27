@@ -1,0 +1,16 @@
+<article class="glance ku-card">
+  <div class="ring" [style.--ring-sweep]="ringSweep()">
+    <div class="ring__core">
+      <span class="ring__value">{{ earnedText() }}</span>
+      <span class="ring__scale">OF 100</span>
+    </div>
+  </div>
+
+  <div class="glance__identity">
+    <p class="glance__code">{{ evaluation().module.code }}</p>
+    <p class="glance__title">{{ evaluation().module.title }}</p>
+  </div>
+
+  <p class="ku-badge">{{ statusLabel() }}</p>
+  <p class="glance__note">{{ evaluation().shortNote }}</p>
+</article>

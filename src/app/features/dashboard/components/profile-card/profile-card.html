@@ -1,0 +1,52 @@
+<section class="profile ku-card">
+  <span class="profile__avatar" aria-hidden="true">{{ initials() }}</span>
+
+  <div class="profile__identity">
+    @if (editing()) {
+      <div class="profile__fields">
+        <input
+          class="ku-input profile__field profile__field--name"
+          placeholder="Your name"
+          aria-label="Your name"
+          [value]="profile().name"
+          (change)="update('name', $event)"
+        />
+        <input
+          class="ku-input profile__field"
+          placeholder="Qualification"
+          aria-label="Qualification"
+          [value]="profile().course"
+          (change)="update('course', $event)"
+        />
+        <input
+          class="ku-input profile__field profile__field--year"
+          placeholder="Year of study"
+          aria-label="Year of study"
+          [value]="profile().year"
+          (change)="update('year', $event)"
+        />
+      </div>
+    } @else {
+      <p class="profile__name">{{ profile().name || 'Add your name' }}</p>
+      <p class="profile__meta">{{ meta() || 'Add your qualification and year' }}</p>
+    }
+  </div>
+
+  <div class="profile__controls">
+    <div class="default-bar">
+      <div>
+        <p class="ku-eyebrow">DEFAULT DP BAR</p>
+        <p class="default-bar__hint">Starting point for new modules</p>
+      </div>
+      <ku-threshold-stepper
+        label="Default DP bar"
+        [value]="defaultThreshold()"
+        (valueChange)="defaultThresholdChange.emit($event)"
+      />
+    </div>
+
+    <button type="button" class="ku-button ku-button--ghost" (click)="toggleEditing()">
+      {{ editing() ? 'Done' : 'Edit profile' }}
+    </button>
+  </div>
+</section>

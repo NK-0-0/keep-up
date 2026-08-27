@@ -1,59 +1,183 @@
 # KeepUp
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.7.
+Exam entry (DP) tracker for students. Capture the assessments that count towards
+each module, enter marks as they come back, and KeepUp works out — module by
+module — whether you have banked enough to qualify to write the exam.
 
-## Development server
+Built to the canvas design in [`design/KeepUp.dc.html`](design/KeepUp.dc.html).
 
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Running it
 
 ```bash
-ng generate component component-name
+npm install
+npm start          # http://localhost:4200
+npm test           # vitest, single run: npx ng test --watch=false
+npm run build
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Out of the box the app runs in **local mode**: same UI, same rules, data kept in
+`localStorage`. Add a Firebase project (below) to switch it to Google sign-in
+with cloud sync — no code changes needed.
+
+## Connecting Firebase
+
+1. Create a Firebase project, add a **Web app**, and enable **Authentication →
+   Sign-in method → Google**.
+2. Create a **Cloud Firestore** database.
+3. Paste the web config into `src/environments/environment.ts`, replacing the
+   `REPLACE_WITH_…` placeholders. These are public identifiers, not secrets —
+   access is enforced by the rules below.
+4. Deploy the rules in [`firestore.rules`](firestore.rules):
+   `firebase deploy --only firestore:rules`.
+5. Add your domain under **Authentication → Settings → Authorized domains**.
+
+`FirebaseService.enabled` flips on once the placeholders are gone, and
+`provideKeepUpData()` swaps the Firestore repositories in for the local ones.
+
+### Data layout
+
+```
+users/{uid}                     profile { name, course, year }, defaultThreshold
+users/{uid}/modules/{moduleId}  code, title, threshold, order, assessments[]
+```
+
+Assessments are stored inline on the module document: they are always read and
+written together, and a module holds a handful of them at most.
+
+## Architecture
+
+Layered so the DP rules — the part that actually matters — stay pure and
+testable, and so no component ever touches the Firebase SDK.
+
+| Layer    | Location           | Responsibility                                                                                                             |
+| -------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Domain   | `src/app/domain`   | Models plus pure DP arithmetic and verdict copy. No Angular, no I/O.                                                       |
+| Data     | `src/app/data`     | `ModulesRepository` / `PreferencesRepository` abstractions, with Firestore and `localStorage` implementations behind them. |
+| Core     | `src/app/core`     | Firebase app/auth handles, the signal-based `AuthService`, and the route guards.                                           |
+| State    | `src/app/state`    | `KeepUpStore` — signals in, derived values out, the only writer.                                                           |
+| Features | `src/app/features` | Dashboard and sign-in screens; presentational components take inputs and emit outputs.                                     |
+
+A few decisions worth knowing about:
+
+- **Signals throughout, zoneless.** No `zone.js`; every component is
+  `OnPush` and state flows through signals.
+- **The repository seam is the whole point.** Swapping Firestore for
+  `localStorage` is one factory in `data.providers.ts`, and the test suite uses
+  the same seam to run without Firebase.
+- **Firestore is not in the initial bundle.** `provideKeepUpData()` is declared
+  on the lazily loaded `DashboardPage`, so the sign-in screen downloads ~100 kB
+  gzipped instead of ~220 kB.
+- **Routes render client-side** (`RenderMode.Client`). Every screen depends on a
+  session that only exists in the browser, so a prerendered shell would just be
+  thrown away at hydration.
+- **The DP rules live in `dp-calculator.ts`** and are covered directly by
+  `dp-calculator.spec.ts`, including the "even full marks cannot save this"
+  case and the weights-don't-add-to-100 warning.
+
+## Auth layer
+
+`AuthService` (`src/app/core/auth`) is the only thing in the app that knows how
+a session is established. Everything else reads its signals.
+
+| Member               | Purpose                                                                           |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `status`             | `pending` → `signed-in` / `signed-out`, or `local` when Firebase is unconfigured. |
+| `user`               | uid, display name, email, photo — kept in step with token refreshes.              |
+| `canAccessData`      | What the guards check.                                                            |
+| `ownerId`            | The key the data layer partitions by.                                             |
+| `getIdToken()`       | Bearer token for API calls; used by the HTTP layer.                               |
+| `signInWithGoogle()` | Popup, falling back to a full-page redirect where popups are blocked.             |
+
+Sign-in uses `browserLocalPersistence`, so a session survives a browser restart,
+and `getRedirectResult` runs at startup to complete the redirect flow.
+
+### Guards
+
+- `authGuard` waits for `whenReady()` before deciding, so refreshing a protected
+  page does not bounce you to sign-in while the session is still loading. It
+  redirects to `/sign-in?returnUrl=…`.
+- `guestGuard` keeps a signed-in student off the sign-in page and honours that
+  `returnUrl`.
+- `safeReturnUrl()` narrows the parameter to an in-app path, so a crafted link
+  cannot redirect a freshly signed-in student off-site.
+
+## HTTP layer
+
+`provideKeepUpHttp()` registers `HttpClient` (with `withFetch()`) and the
+interceptor chain. **The Firebase SDK has its own transport and does not go
+through `HttpClient`** — none of this applies to auth or Firestore traffic. It
+is here for your own backend API.
+
+Order is the outbound order: a request runs top to bottom, the response comes
+back bottom to top.
+
+| #   | Interceptor     | Responsibility                                                                                                                                                                   |
+| --- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `apiUrl`        | Expands `/api/...` against `API_BASE_URL`, so no host is hard-coded. Runs first so everything below sees the final URL.                                                          |
+| 2   | `loading`       | Counts in-flight requests into `LoadingService` for the shell's progress bar — once per logical request, not per retry.                                                          |
+| 3   | `error`         | Normalises `HttpErrorResponse` into `ApiFailure`, raises one notification, and treats a 401 as an expired session. Sits **outside** retry so only the final failure is reported. |
+| 4   | `correlationId` | Adds `X-Request-Id`, shared across every attempt at the same request. App API only, to avoid needless CORS preflights.                                                           |
+| 5   | `retry`         | Exponential backoff with jitter for transient failures, honouring `Retry-After`. Safe methods only.                                                                              |
+| 6   | `timeout`       | Caps each attempt at 20 s and surfaces it as a 408, since `fetch` has no timeout of its own.                                                                                     |
+| 7   | `authToken`     | Attaches the Firebase ID token. **Inside** retry, so each attempt gets a fresh token.                                                                                            |
+
+### Per-request overrides
+
+Set them via `HttpContext`:
+
+```ts
+import { HttpContext } from '@angular/common/http';
+import { SKIP_ERROR_NOTIFICATION, MAX_RETRIES, REQUEST_TIMEOUT_MS } from './core/http/http.context';
+
+http.get('/api/report', {
+  context: new HttpContext()
+    .set(REQUEST_TIMEOUT_MS, 0) // no timeout for a slow report
+    .set(SKIP_ERROR_NOTIFICATION, true), // caller handles the error itself
+});
+```
+
+`SKIP_AUTH_TOKEN`, `SKIP_LOADING` and `backgroundRequest()` (which sets both
+`SKIP_ERROR_NOTIFICATION` and `SKIP_LOADING`) are available too.
+
+### Two security decisions worth knowing about
+
+- **The ID token only ever goes to your own API.** `isAppApiUrl()` compares
+  parsed origins rather than string prefixes, so a lookalike host such as
+  `https://api.yours.com.attacker.test` does not match and gets no credential.
+- **No XSRF interceptor**, deliberately. Bearer tokens are not sent
+  automatically by the browser, so there is nothing for CSRF to exploit. If you
+  ever move to cookie-based sessions, add Angular's built-in
+  `withXsrfConfiguration()` to `provideKeepUpHttp()`.
+
+### Configuring the API origin
+
+Same-origin backends need nothing. For a separate host, provide the token:
+
+```ts
+{ provide: API_BASE_URL, useValue: 'https://api.keepup.app' }
+```
+
+## Notifications
+
+`NotificationService` holds a signal-backed stack rendered once by
+`NotificationHost` in the app shell. Messages auto-dismiss after 8 s and
+identical repeats collapse, so a burst of failing requests raises one banner
+rather than a pile. Firestore errors stay as an inline alert on the dashboard,
+where they belong to the data on screen.
+
+## Tests
 
 ```bash
-ng generate --help
+npx ng test --watch=false
 ```
 
-## Building
+81 tests, covering:
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- the DP arithmetic and verdict copy, plus input parsing and clamping;
+- the store against fake repositories;
+- the dashboard rendering end to end (empty state, adding a module, layout
+  toggle, clear-everything confirmation);
+- the full interceptor chain against `HttpTestingController` — URL resolution,
+  token attachment and the off-origin refusal, error normalisation, 401
+  sign-out, retry backoff and `Retry-After`, and timeout handling;
+- the guards, including the open-redirect cases for `returnUrl`.

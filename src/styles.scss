@@ -1,1 +1,241 @@
-/* You can add global styles to this file, and also import other style files */
+/* KeepUp global stylesheet: design tokens plus the primitives that repeat
+   across the dashboard. Component styles cover only what is local to them. */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --ku-bg: #101214;
+  --ku-surface: #171a1e;
+  --ku-surface-raised: #191d21;
+  --ku-surface-sunken: #101315;
+  --ku-surface-inset: #1d2126;
+  --ku-chip: #22272c;
+
+  /* Lines */
+  --ku-border: #262b31;
+  --ku-border-soft: #23272c;
+  --ku-border-strong: #2c3238;
+  --ku-border-bright: #343a41;
+
+  /* Type */
+  --ku-text: #f2f3f5;
+  --ku-text-bright: #c8cfd6;
+  --ku-text-muted: #a4abb4;
+  --ku-text-dim: #8b929b;
+  --ku-text-dimmer: #7f8791;
+  --ku-text-faint: #6d757e;
+  --ku-text-placeholder: #5c636c;
+
+  /* Status */
+  --ku-mint: #5fd8a0;
+  --ku-mint-deep: #33ac7d;
+  --ku-mint-ink: #0d1a14;
+  --ku-amber: #f2a63c;
+  --ku-red: #f2607a;
+  --ku-red-border: #4a2b33;
+
+  --ku-radius-sm: 10px;
+  --ku-radius-md: 13px;
+  --ku-radius-lg: 20px;
+  --ku-radius-xl: 24px;
+  --ku-shell-width: 1180px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--ku-bg);
+  color: var(--ku-text);
+  font-family:
+    Nunito,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--ku-mint);
+  text-decoration: none;
+
+  &:hover {
+    color: #8fe8bd;
+  }
+}
+
+input,
+button {
+  font-family: inherit;
+}
+
+input::placeholder {
+  color: var(--ku-text-placeholder);
+}
+
+/* The design's numeric fields are typed, not spun. */
+input[type='number'] {
+  appearance: textfield;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+}
+
+::selection {
+  background: var(--ku-mint);
+  color: var(--ku-bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ku-mint);
+  outline-offset: 2px;
+}
+
+@keyframes ku-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Status theming ------------------------------------------------------
+   Each status sets two custom properties; every badge, ring, bar and verdict
+   reads them, so a status change recolours the whole card at once. */
+.ku-status-secured {
+  --ku-status: var(--ku-mint);
+  --ku-status-bg: rgb(95 216 160 / 13%);
+}
+
+.ku-status-in-progress {
+  --ku-status: var(--ku-amber);
+  --ku-status-bg: rgb(242 166 60 / 13%);
+}
+
+.ku-status-missed {
+  --ku-status: var(--ku-red);
+  --ku-status-bg: rgb(242 96 122 / 13%);
+}
+
+/* --- Primitives ---------------------------------------------------------- */
+.ku-card {
+  border-radius: var(--ku-radius-xl);
+  background: var(--ku-surface);
+  border: 1px solid var(--ku-border);
+}
+
+.ku-eyebrow {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: var(--ku-text-faint);
+}
+
+.ku-badge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-align: center;
+  background: var(--ku-status-bg);
+  color: var(--ku-status);
+}
+
+.ku-input {
+  padding: 12px 15px;
+  border-radius: var(--ku-radius-md);
+  border: 1px solid var(--ku-border-strong);
+  background: var(--ku-surface-sunken);
+  color: var(--ku-text);
+  font-size: 14.5px;
+  font-weight: 600;
+  outline: none;
+
+  &:focus {
+    border-color: var(--ku-mint);
+  }
+
+  &--numeric {
+    text-align: center;
+    font-weight: 800;
+  }
+}
+
+.ku-button {
+  cursor: pointer;
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &--primary {
+    padding: 11px 20px;
+    background: var(--ku-mint);
+    color: var(--ku-mint-ink);
+    font-size: 14.5px;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgb(95 216 160 / 28%);
+    }
+  }
+
+  &--ghost {
+    padding: 11px 18px;
+    background: transparent;
+    border-color: var(--ku-border-strong);
+    color: #9aa2ab;
+    font-size: 13.5px;
+
+    &:hover {
+      color: var(--ku-mint);
+      border-color: var(--ku-mint-deep);
+    }
+  }
+
+  &--danger:hover {
+    color: var(--ku-red);
+    border-color: var(--ku-red-border);
+  }
+}
+
+.ku-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

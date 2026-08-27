@@ -1,0 +1,121 @@
+.sign-in {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background: radial-gradient(1200px 600px at 15% -10%, #1b2622 0%, var(--ku-bg) 60%);
+}
+
+.panel {
+  width: min(460px, 100%);
+  padding: 38px 34px;
+
+  p {
+    margin: 0;
+  }
+}
+
+.panel__brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 28px;
+}
+
+.panel__mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: var(--ku-mint);
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 19px;
+  color: var(--ku-mint-ink);
+}
+
+.panel__wordmark {
+  display: flex;
+  flex-direction: column;
+}
+
+.panel__name {
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: -0.4px;
+}
+
+.panel__tagline {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ku-text-dimmer);
+  letter-spacing: 0.3px;
+}
+
+.panel__title {
+  margin: 0 0 10px;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.8px;
+  line-height: 1.15;
+  text-wrap: pretty;
+}
+
+.panel__body {
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--ku-text-muted);
+  margin-bottom: 26px !important;
+  text-wrap: pretty;
+}
+
+.google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: var(--ku-radius-md);
+  background: var(--ku-mint);
+  color: var(--ku-mint-ink);
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgb(95 216 160 / 28%);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: progress;
+  }
+}
+
+.google__logo {
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 3px;
+}
+
+.panel__error {
+  margin-top: 14px !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ku-red);
+}
+
+.panel__fineprint {
+  margin-top: 20px !important;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ku-text-faint);
+  text-wrap: pretty;
+}
